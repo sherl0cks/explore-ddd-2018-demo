@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openinnovationlabs.ProducerConstants;
+import io.openinnovationlabs.application.ConfigurationProvider;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -39,14 +40,8 @@ public class KafkaAdapter extends AbstractVerticle {
         messageConsumer.handler(message -> onTestMessage(message));
     }
 
-    // TODO add configuration loader https://vertx.io/docs/vertx-config/java/ kube store
     public boolean initializeKafkaProducer() {
-        Map<String, String> config = new HashMap<>();
-        config.put("bootstrap.servers", "localhost:9092");
-        config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        config.put("acks", "1");
-        this.kafkaProducer = KafkaProducer.create(vertx, config);
+        this.kafkaProducer = KafkaProducer.create(vertx, ConfigurationProvider.getKafkaBrokerConfigAsMap() );
         return true;
     }
 
@@ -55,7 +50,8 @@ public class KafkaAdapter extends AbstractVerticle {
      */
     public void onTestMessage(Message<String> message) {
         LOGGER.info(String.format("message received: %s", message.body()));
-        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(ProducerConstants.KAFKA_PRODUCER_TOPIC, message.body());
+        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(ProducerConstants.KAFKA_PRODUCER_TOPIC,
+                message.body());
         this.kafkaProducer.write(record, ar -> handleKafkaWriteAsyncResult(message, ar));
     }
 

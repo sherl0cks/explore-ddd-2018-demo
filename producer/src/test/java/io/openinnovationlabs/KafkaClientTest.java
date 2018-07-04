@@ -16,7 +16,9 @@ import java.io.IOException;
 import io.debezium.kafka.KafkaCluster;
 import io.debezium.util.Testing;
 import io.openinnovationlabs.adapters.KafkaAdapter;
+import io.openinnovationlabs.application.ConfigurationProvider;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -41,30 +43,31 @@ public class KafkaClientTest {
     }
 
     public static void spinUpKafka() throws IOException {
-     // Kafka setup for the example
+        // Kafka setup for the example
         File dataDir = Testing.Files.createTestingDirectory("cluster");
         dataDir.deleteOnExit();
-        kafkaCluster = new KafkaCluster()
-        .usingDirectory(dataDir)
-        .withPorts(2181, 9092)
-        .addBrokers(1)
-        .deleteDataPriorToStartup(true)
-        .startup();
+
+        JsonObject kafkaBrokerConfig = ConfigurationProvider.CONFIG.getJsonObject("kafka.broker");
+        kafkaCluster = new KafkaCluster().usingDirectory(dataDir)
+                .withPorts(kafkaBrokerConfig.getInteger("zookeeper.port"),
+                        kafkaBrokerConfig.getInteger("kafka.firstPort"))
+                .addBrokers(kafkaBrokerConfig.getInteger("kafka.brokers")).deleteDataPriorToStartup(true).startup();
 
         kafkaCluster.createTopic("kafka-test-topic", 1, 1);
-        
+
     }
 
     @Test
     public void shouldSendARecordToKafka(TestContext context) {
-        for (int i=0; i<10; i++){
+        for (int i = 0; i < 10; i++) {
             Async async = context.async();
-            vertx.eventBus().send(ProducerConstants.KAFKA_PRODUCER_ADDRESS, "test " + String.valueOf(System.currentTimeMillis()), ar -> {
-                if ( ar.failed() ){
-                    context.fail(ar.cause());
-                }
-                async.complete();
-            });
+            vertx.eventBus().send(ProducerConstants.KAFKA_PRODUCER_ADDRESS,
+                    "test " + String.valueOf(System.currentTimeMillis()), ar -> {
+                        if (ar.failed()) {
+                            context.fail(ar.cause());
+                        }
+                        async.complete();
+                    });
             async.awaitSuccess();
         }
     }
