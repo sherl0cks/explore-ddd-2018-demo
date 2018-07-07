@@ -14,7 +14,10 @@ import java.util.List;
 /**
  *
  * The idea here is to make Verticles more actor like, where every Aggregate instance has it's mailbox which follows
- * a simple convention to remove boiler plate. This is inspired by https://vaughnvernon.co/?p=780
+ * a simple convention to remove boiler plate. This is inspired by https://vaughnvernon.co/?p=780. In this case, the
+ * mailbox accepts Commands, not any arbitrary message.
+ *
+ * // TODO how are event subscriptions between Aggregates handled?
  *
  * Reflection modelled after https://github.com/eventuate-clients/eventuate-client-java/blob/master/eventuate-client-java/src/main/java/io/eventuate/ReflectiveMutableCommandProcessingAggregate.java
  */

@@ -24,13 +24,11 @@ public class OpportunityTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpportunityTest.class);
 
-    private static Vertx vertx;
     private static DomainModel domainModel;
 
     @BeforeClass
     public static void init(TestContext context) throws IOException {
-        vertx = Vertx.vertx();
-        domainModel = new DomainModel(vertx);
+        domainModel = new DomainModel(Vertx.vertx());
     }
 
     @Test
