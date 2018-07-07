@@ -13,4 +13,6 @@ public class ProducerConstants {
      * Kafka topics
      */
     public static String KAFKA_PRODUCER_TOPIC = "kafka-test-topic";
+
+    
 }

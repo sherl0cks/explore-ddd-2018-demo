@@ -3,3 +3,6 @@
 .vscode
 target
 .project
+*.iml
+.classpath
+.idea/

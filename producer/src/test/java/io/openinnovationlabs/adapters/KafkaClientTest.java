@@ -1,5 +1,6 @@
-package io.openinnovationlabs;
+package io.openinnovationlabs.adapters;
 
+import io.openinnovationlabs.ProducerConstants;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
