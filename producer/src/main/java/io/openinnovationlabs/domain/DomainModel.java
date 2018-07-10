@@ -18,7 +18,6 @@ import java.util.List;
 /**
  * TODO Something could be done here with service proxies
  * TODO perhaps this needs an interface
- * TODO perhaps one would like to provide async handlers to the methods
  * <p>
  * In short, the domain model becomes a simple abstraction over the Vert.x event bus which assumes a verticle per
  * aggregate instance, which makes verticles look more actor like as they all become uniquely addressable a la the
@@ -28,6 +27,9 @@ import java.util.List;
  * least while in the domain. Adapters e.g. http / db / messaging will still need some, but minimal vert.x knowledge.
  */
 public class DomainModel {
+
+    public static final String COMMAND_ADDRESS_FORMAT = "v1-%s-%s-Commands";
+    public static final String EVENTS_ADDRESS_FORMAT = "v1-%s-%s-Events";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DomainModel.class);
     private Vertx vertx;
@@ -156,9 +158,8 @@ public class DomainModel {
     }
 
 
-    // TODO dedup magic string
     public MessageConsumer<JsonObject> subscribeToEventStream(AggregateIdentity identity) {
-        return vertx.eventBus().consumer(String.format("%s-%s-Events", identity.type.getSimpleName(),
+        return vertx.eventBus().consumer(String.format(EVENTS_ADDRESS_FORMAT, identity.type.getSimpleName(),
                 identity.id));
     }
 
@@ -167,14 +168,14 @@ public class DomainModel {
     }
 
     public String vertxAddressFor(Command command) {
-        return String.format("%s-%s-Commands",
+        return String.format(COMMAND_ADDRESS_FORMAT,
                 command.aggregateIdentity().type.getSimpleName(),
                 command.aggregateIdentity().id
         );
     }
 
     public String vertxAddressFor(Event event) {
-        return String.format("%s-%s-Events",
+        return String.format(EVENTS_ADDRESS_FORMAT,
                 event.aggregateIdentity().type.getSimpleName(),
                 event.aggregateIdentity().id
         );

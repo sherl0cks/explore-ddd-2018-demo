@@ -3,7 +3,6 @@ package io.openinnovationlabs.domain;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +17,10 @@ import java.util.List;
  * a simple convention to remove boiler plate. This is inspired by https://vaughnvernon.co/?p=780. In this case, the
  * mailbox accepts Commands, not any arbitrary message.
  * <p>
- * // TODO need example of event subscription between aggregates. should be straightforward...
- * <p>
  * Reflection modelled after https://github.com/eventuate-clients/eventuate-client-java/blob/master/eventuate-client-java/src/main/java/io/eventuate/ReflectiveMutableCommandProcessingAggregate.java
+ * <p>
+ * TODO need example of event subscription between aggregates. should be straightforward...
+ * TODO garbage collect aggregates that have no been used with a simple timer that is reset on each command/event
  */
 public abstract class Aggregate extends AbstractVerticle {
 
@@ -59,9 +59,8 @@ public abstract class Aggregate extends AbstractVerticle {
     }
 
     private void initializeMessageConsumers() {
-        String commandAddress = String.format("%s-%s-Commands", this.getClass().getSimpleName(), this.id);
-        MessageConsumer<JsonObject> commandProcessor = vertx.eventBus().consumer(commandAddress);
-        commandProcessor.handler(message -> handleCommandMessage(message));
+        String commandAddress = String.format(DomainModel.COMMAND_ADDRESS_FORMAT, this.getClass().getSimpleName(), this.id);
+        vertx.eventBus().<JsonObject>consumer(commandAddress).handler(this::handleCommandMessage);
     }
 
     /**
@@ -103,7 +102,7 @@ public abstract class Aggregate extends AbstractVerticle {
 
     // TODO this ought to have more robust error handling
     private List<Event> processCommand(Command command) {
-        LOGGER.info( String.format("%s :: %s received ", command.aggregateIdentity(), command.getClass().getSimpleName()));
+        LOGGER.info(String.format("%s :: %s received ", command.aggregateIdentity(), command.getClass().getSimpleName()));
         List<Event> events = null;
 
         try {
@@ -118,7 +117,7 @@ public abstract class Aggregate extends AbstractVerticle {
         return events;
     }
 
-    // TODO this ought to may more robust error handling
+
     private void applyEvents(List<Event> events) {
         for (Event e : events) {
             try {
@@ -145,9 +144,9 @@ public abstract class Aggregate extends AbstractVerticle {
         }
     }
 
-    public void apply(EventsReplayed event){
+    public void apply(EventsReplayed event) {
         this.replaying = false;
-        LOGGER.info(String.format("%s :: replay complete",event.aggregateIdentity));
+        LOGGER.info(String.format("%s :: replay complete", event.aggregateIdentity));
     }
 
 }
