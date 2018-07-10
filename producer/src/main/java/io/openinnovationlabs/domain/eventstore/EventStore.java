@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 // TODO should probably be a service proxy
 public class EventStore extends AbstractVerticle {
 
+    public final static String APPEND_ADDRESS = "v1-EventStore-Append";
+    public final static String LOAD_EVENT_ADDRESS = "v1-EventStore-LoadEvents";
+
     private final static Logger LOGGER = LoggerFactory.getLogger(EventStore.class);
 
     private AppendOnlyStore store;
@@ -24,14 +27,10 @@ public class EventStore extends AbstractVerticle {
         } else {
             new IllegalStateException(String.format("appendOnlyStoreType %s currently not implemented", appendOnlyStoreType));
         }
-        MessageConsumer<JsonObject> appendConsumer = vertx.eventBus().consumer("EventStore-Append");
-        appendConsumer.handler(message -> append(message));
 
-        MessageConsumer<JsonObject> loadEventsConsumer = vertx.eventBus().consumer("EventStore-LoadEvents");
-        loadEventsConsumer.handler(message -> loadEvents(message));
+        vertx.eventBus().<JsonObject>consumer(APPEND_ADDRESS).handler(this::append);
 
-        MessageConsumer<JsonObject> clearEventsConsumer = vertx.eventBus().consumer("EventStore-Clear");
-        clearEventsConsumer.handler(message -> clearEvents(message));
+        vertx.eventBus().<JsonObject>consumer(LOAD_EVENT_ADDRESS).handler(this::loadEvents);
 
         LOGGER.info("Event Store is up");
     }
@@ -40,7 +39,7 @@ public class EventStore extends AbstractVerticle {
     public void append(Message<JsonObject> message) {
         AppendEventsCommand command = message.body().mapTo(AppendEventsCommand.class);
         store.append(command.events);
-        LOGGER.info(String.format("Events appended %d",command.events.size()));
+        LOGGER.info(String.format("Events appended %d", command.events.size()));
         message.reply("complete");
     }
 
@@ -51,12 +50,4 @@ public class EventStore extends AbstractVerticle {
         LOGGER.info("reply");
     }
 
-    public void clearEvents(Message<JsonObject> message) {
-        if (config().getString("appendOnlyStoreType").equals("InMemory")) {
-            ((InMemoryAppendOnlyStore) store).clear();
-            message.reply("success");
-        } else {
-            message.reply("fail");
-        }
-    }
 }

@@ -1,6 +1,7 @@
 package io.openinnovationlabs.domain;
 
 import io.openinnovationlabs.domain.eventstore.AppendEventsCommand;
+import io.openinnovationlabs.domain.eventstore.EventStore;
 import io.openinnovationlabs.domain.eventstore.LoadEventResponse;
 import io.openinnovationlabs.domain.eventstore.LoadEventsCommand;
 import io.vertx.core.*;
@@ -117,12 +118,12 @@ public class DomainModel {
     public Future persistEvents(List<Event> events) {
         Future future = Future.future();
         AppendEventsCommand command = new AppendEventsCommand(events);
-        vertx.eventBus().send("EventStore-Append", JsonObject.mapFrom(command), ar -> {
+        vertx.eventBus().send(EventStore.APPEND_ADDRESS, JsonObject.mapFrom(command), ar -> {
             if (ar.succeeded()) {
                 LOGGER.info("events persisted!!!");
                 future.complete();
             } else {
-                LOGGER.error("no persist");
+                LOGGER.error(String.format("failed to persist events %s", ar.cause().getLocalizedMessage()));
                 future.fail(ar.cause());
             }
         });
@@ -138,7 +139,7 @@ public class DomainModel {
     public Future<LoadEventResponse> loadEvents(AggregateIdentity aggregateIdentity) {
         Future<LoadEventResponse> future = Future.future();
         LoadEventsCommand command = new LoadEventsCommand(aggregateIdentity);
-        vertx.eventBus().send("EventStore-LoadEvents", JsonObject.mapFrom(command), ar -> {
+        vertx.eventBus().send(EventStore.LOAD_EVENT_ADDRESS, JsonObject.mapFrom(command), ar -> {
             if (ar.succeeded()) {
                 LoadEventResponse response = null;
                 try {
