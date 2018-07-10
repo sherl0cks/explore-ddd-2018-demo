@@ -25,7 +25,8 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
 
     @Test
     public void shouldCreateAnOpportunity(TestContext context) {
-        // given
+
+        // background: these are async assertions to setup first
         Async async = context.async();
 
         OpportunityId opportunityId = new OpportunityId("1");
@@ -36,6 +37,8 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
                 async.complete();
             }
         });
+
+        // given nothing
 
 
         // when
@@ -51,15 +54,14 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
 
     /**
      * This test will exercise the event replay functionality
+     *
      * @param context
      */
     @Test
     public void shouldWinAnOpportunity(TestContext context) {
-        // given an opportunity for customer acme
+
+        // background: these are the async asserts we need to setup first
         Async async = context.async();
-        // and some events in the past
-        OpportunityCreated event = new OpportunityCreated(new OpportunityId("1"), "acme", "residency", Instant.now().minus(1, ChronoUnit.HOURS).toString(), 0);
-        domainModel.persistEvents(Arrays.asList(event));
 
         OpportunityId opportunityId = new OpportunityId("1");
         MessageConsumer<JsonObject> testConsumer = domainModel.subscribeToEventStream(opportunityId);
@@ -74,15 +76,26 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
                     async.complete();
                 });
             }
+
+        });
+
+        // given an opportunity for customer acme
+        OpportunityCreated event = new OpportunityCreated(new OpportunityId("1"), "acme", "residency", Instant.now().minus(1, ChronoUnit.HOURS).toString(), 0);
+        domainModel.persistEvents(Arrays.asList(event), ar -> {
+            if (ar.succeeded()){
+                // when we win the opportunity
+                domainModel.issueCommand(new WinOpportunity(new OpportunityId("1")));
+
+                // then create an opportunity won event
+                // and make sure the proper events were persisted
+                async.awaitSuccess(2000);
+            }
         });
 
 
-        // when we win the opportunity
-        domainModel.issueCommand(new WinOpportunity(new OpportunityId("1")));
 
 
-        // then create an opportunity won event
-        // and make sure the proper events were persisted
-        async.awaitSuccess(2000);
+
+
     }
 }

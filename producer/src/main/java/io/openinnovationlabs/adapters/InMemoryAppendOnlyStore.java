@@ -3,6 +3,9 @@ package io.openinnovationlabs.adapters;
 import io.openinnovationlabs.domain.AggregateIdentity;
 import io.openinnovationlabs.domain.Event;
 import io.openinnovationlabs.domain.eventstore.AppendOnlyStore;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
 import java.util.ArrayList;
 import java.util.List;

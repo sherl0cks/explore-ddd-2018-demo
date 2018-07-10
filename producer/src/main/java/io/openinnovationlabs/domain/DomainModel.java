@@ -43,8 +43,7 @@ public class DomainModel {
             if (ar.failed()) {
                 if (ar.cause() instanceof ReplyException) {
                     if (((ReplyException) ar.cause()).failureType().equals(ReplyFailure.NO_HANDLERS)) {
-                        LOGGER.info(String.format("No handlers for %s. Deploying %s verticle", vertxAddressFor
-                                (command), command.aggregateIdentity()));
+                        LOGGER.info(String.format("%s :: no handlers, deploying verticle", command.aggregateIdentity()));
 
                         // what happens if more than one command is issued before the verticle comes up?
                         // dead letter here ?
@@ -74,7 +73,7 @@ public class DomainModel {
                 DeploymentOptions options = new DeploymentOptions().setConfig(config);
                 vertx.deployVerticle(command.aggregateIdentity().type, options, ar2 -> {
                     if (ar2.succeeded()) {
-                        LOGGER.info(String.format("Deployment of %s succeeded", command.aggregateIdentity()));
+                        LOGGER.info(String.format("%s :: deployment succeeded", command.aggregateIdentity()));
                         if (config.containsKey("replay")) {
                             sendReplayEventCommand(command, eventsToReplay);
                         } else {
@@ -83,7 +82,7 @@ public class DomainModel {
                         }
 
                     } else {
-                        LOGGER.error(String.format("Deployment of %s failed: %s", command.aggregateIdentity(),
+                        LOGGER.error(String.format("%s :: deployment failed :: %s", command.aggregateIdentity(),
                                 ar2.cause().getLocalizedMessage()));
                     }
                 });
@@ -96,7 +95,6 @@ public class DomainModel {
 
     private void sendReplayEventCommand(Command initialCommand, final List<Event> eventsToReplay) {
         AggregateIdentity id = initialCommand.aggregateIdentity();
-        LOGGER.info(String.format("Replaying %d events for %s", eventsToReplay.size(), id));
         ReplayEventsCommand replayEventsCommand = new ReplayEventsCommand(id, eventsToReplay);
         DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", replayEventsCommand.getClass().getName());
         vertx.eventBus().send(vertxAddressFor(replayEventsCommand), JsonObject.mapFrom(replayEventsCommand), options,
@@ -121,15 +119,21 @@ public class DomainModel {
         }
     }
 
-    public void persistEvents(List<Event> events) {
+    public void persistEvents(List<Event> events, Handler<AsyncResult> handler) {
         AppendEventsCommand command = new AppendEventsCommand(events);
         vertx.eventBus().send("EventStore-Append", JsonObject.mapFrom(command));
+        handler.handle(Future.succeededFuture());
     }
 
     public void persistAndPublishEvents(List<Event> events) {
-        // TODO persist needs to be async
-        persistEvents(events);
-        publishEvents(events);
+        persistEvents(events, ar -> {
+            if (ar.succeeded()) {
+                publishEvents(events);
+            } else {
+                // TODO perhaps some retry logic here?
+                LOGGER.error(String.format("Failed to persist events: %s", ar.cause().getLocalizedMessage()));
+            }
+        });
     }
 
     public void loadEvents(AggregateIdentity aggregateIdentity, Handler<AsyncResult<LoadEventResponse>> handler) {

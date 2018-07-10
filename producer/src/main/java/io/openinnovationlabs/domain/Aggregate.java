@@ -18,7 +18,7 @@ import java.util.List;
  * a simple convention to remove boiler plate. This is inspired by https://vaughnvernon.co/?p=780. In this case, the
  * mailbox accepts Commands, not any arbitrary message.
  * <p>
- * // TODO how are event subscriptions between Aggregates handled?
+ * // TODO need example of event subscription between aggregates. should be straightforward...
  * <p>
  * Reflection modelled after https://github.com/eventuate-clients/eventuate-client-java/blob/master/eventuate-client-java/src/main/java/io/eventuate/ReflectiveMutableCommandProcessingAggregate.java
  */
@@ -78,7 +78,7 @@ public abstract class Aggregate extends AbstractVerticle {
      * TODO what is the right way?
      */
     private void handleCommandMessage(Message<JsonObject> message) {
-        Object command = mapToCommandObject(message);
+        Command command = (Command) mapToCommandObject(message);
         final List<Event> events = processCommand(command);
         applyEvents(events);
         if (events.get(events.size() - 1) instanceof EventsReplayed) {
@@ -102,7 +102,8 @@ public abstract class Aggregate extends AbstractVerticle {
     }
 
     // TODO this ought to have more robust error handling
-    private List<Event> processCommand(Object command) {
+    private List<Event> processCommand(Command command) {
+        LOGGER.info( String.format("%s :: %s received ", command.aggregateIdentity(), command.getClass().getSimpleName()));
         List<Event> events = null;
 
         try {
@@ -130,6 +131,7 @@ public abstract class Aggregate extends AbstractVerticle {
                 e1.printStackTrace();
             }
         }
+        LOGGER.info(String.format("%s :: %d event(s) applied ", events.get(0).aggregateIdentity(), events.size()));
     }
 
     public List<Event> process(ReplayEventsCommand command) {
@@ -145,7 +147,7 @@ public abstract class Aggregate extends AbstractVerticle {
 
     public void apply(EventsReplayed event){
         this.replaying = false;
-        LOGGER.info(String.format("Replay complete for %s",event.aggregateIdentity));
+        LOGGER.info(String.format("%s :: replay complete",event.aggregateIdentity));
     }
 
 }
