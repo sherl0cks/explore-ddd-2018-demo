@@ -25,7 +25,8 @@ public abstract class Aggregate extends AbstractVerticle {
 
     private static Logger LOGGER = LoggerFactory.getLogger(Aggregate.class);
     private String id;
-    private DomainModel domainModel; // perhaps this should be a singleton?
+    private DomainModel domainModel; // TODO perhaps this should be a singleton?
+    protected long eventIndex = 0;
 
     /**
      * idea here is give subclasses common initialization but with an extension point in start(). Subclasses
@@ -34,17 +35,19 @@ public abstract class Aggregate extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
         String id = context.config().getString("id");
-        if (id == null || id.isEmpty()) {
+        if (id == null || id.isEmpty()){
             startFuture.fail("id must be set in DeploymentOptions");
         } else {
             this.id = id;
         }
 
-        domainModel = new DomainModel(vertx);
+        this.domainModel = new DomainModel(vertx);
+
+
         initializeMessageConsumers();
 
-        startFuture.complete();
         start();
+        startFuture.complete();
     }
 
     private void initializeMessageConsumers() {
@@ -54,11 +57,24 @@ public abstract class Aggregate extends AbstractVerticle {
         commandProcessor.handler(message -> handleCommandMessage(message));
     }
 
+    /**
+     * the order of operations in this method is handled differently by Akka than what Vaughn Vernon suggests in
+     * https://vaughnvernon.co/?page_id=168#iddd
+     * https://doc.akka.io/docs/akka/2.5/persistence.html
+     *
+     * the current approach where persistence happens after applying events suggests that non transactional,
+     * synchronous interaction with remote services (e.g. http), which is owned by this bounded context should be
+     * implemented with adapters that subscribe to the vertx event stream and thus would receive the events only
+     * after they were successfully persisted. external bounded contexts will follow the event stream in kafka
+     *
+     * TODO what does eventuate do?
+     * TODO what is the right way?
+      */
     private void handleCommandMessage(Message<JsonObject> message) {
         Object command = mapToCommandObject(message);
         List<Event> events = processCommand(command);
         applyEvents(events);
-        publishEvents(events);
+        domainModel.persistAndPublishEvents(events);
     }
 
     private Object mapToCommandObject(Message<JsonObject> message){
@@ -72,6 +88,7 @@ public abstract class Aggregate extends AbstractVerticle {
         return message.body().mapTo(commandClass);
     }
 
+    // TODO this ought to have more robust error handling
     private List<Event> processCommand(Object command){
         List<Event> events = null;
 
@@ -87,6 +104,7 @@ public abstract class Aggregate extends AbstractVerticle {
         return events;
     }
 
+    // TODO this ought to may more robust error handling
     private void applyEvents(List<Event> events){
         for (Event e : events) {
             try {
@@ -101,12 +119,5 @@ public abstract class Aggregate extends AbstractVerticle {
         }
     }
 
-    private void publishEvents(List<Event> events){
-        DomainModel domainModel = new DomainModel(vertx);
-        for (Event e : events) {
-            domainModel.publishEvent(e);
-        }
-
-    }
 
 }

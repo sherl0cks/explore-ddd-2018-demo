@@ -1,16 +1,10 @@
 package io.openinnovationlabs.domain;
 
 /**
- * TODO
- * Command
+ * TODO dunno what to do with this interface or even if its needed. maybe shouldn't have public final variables on commands / events?
+ *
  */
-public abstract class Command {
+public interface Command<T extends AggregateIdentity> {
 
-    public final Class aggregateType;
-    public final String aggregateId;
-
-    public Command(Class aggregateType, String aggregateId) {
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-    }
+    T aggregateIdentity();
 }

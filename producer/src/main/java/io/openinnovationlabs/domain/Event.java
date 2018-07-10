@@ -1,24 +1,24 @@
 package io.openinnovationlabs.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
 
 /**
- * Event
+ * TODO split out an interface from the abstract class
  */
-public abstract class Event {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS,
+        include = JsonTypeInfo.As.WRAPPER_OBJECT)
+public interface Event {
 
-    public final LocalDateTime occurredAt;
-    public final String aggregateId;
-    public final Class aggregateType;
+    Instant occurredOn();
+    AggregateIdentity aggregateIdentity();
+    long index();
 
-    public Event(Class aggregateType, String aggregateId){
 
-        this.aggregateType = aggregateType;
-        this.aggregateId = aggregateId;
-
-        // being selfish with the timezone
-        // TODO revist timezone
-        this.occurredAt = LocalDateTime.now(TimeZone.getTimeZone("America/Denver").toZoneId()); 
-    }
 }
