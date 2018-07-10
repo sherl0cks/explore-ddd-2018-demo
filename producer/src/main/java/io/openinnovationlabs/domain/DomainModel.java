@@ -1,6 +1,5 @@
 package io.openinnovationlabs.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.openinnovationlabs.domain.eventstore.AppendEventsCommand;
 import io.openinnovationlabs.domain.eventstore.LoadEventResponse;
 import io.openinnovationlabs.domain.eventstore.LoadEventsCommand;
@@ -44,10 +43,12 @@ public class DomainModel {
             if (ar.failed()) {
                 if (ar.cause() instanceof ReplyException) {
                     if (((ReplyException) ar.cause()).failureType().equals(ReplyFailure.NO_HANDLERS)) {
-                        LOGGER.info(ar.cause().getLocalizedMessage());
+                        LOGGER.info(String.format("No handlers for %s. Deploying %s verticle", vertxAddressFor
+                                (command), command.aggregateIdentity()));
 
                         // what happens if more than one command is issued before the verticle comes up?
                         // dead letter here ?
+                        // how would we even know...
                         deployAggregrateVerticle(command);
                     }
                 } else {
@@ -58,22 +59,55 @@ public class DomainModel {
     }
 
     /**
-     * TODO handle rehydration from event log
-     * use Akka as the example https://doc.akka.io/docs/akka/current/persistence.html
+     * TODO break this into smaller parts
      */
     private void deployAggregrateVerticle(Command command) {
-        JsonObject config = new JsonObject().put("id", command.aggregateIdentity().id);
-        DeploymentOptions options = new DeploymentOptions().setConfig(config);
-        vertx.deployVerticle(command.aggregateIdentity().type, options, ar -> {
-            if (ar.succeeded()) {
-                LOGGER.info(String.format("deployment of %s succeeded", command.aggregateIdentity()));
+        loadEvents(command.aggregateIdentity(), ar1 -> {
 
-                // when verticle is deployed, send a create message to it
-                issueCommand(command);
+            if (ar1.succeeded()) {
+                JsonObject config = new JsonObject().put("id", command.aggregateIdentity().id);
+                final List<Event> eventsToReplay = ar1.result().events;
+                if (eventsToReplay.size() > 0) {
+                    config.put("replay", true);
+                }
+
+                DeploymentOptions options = new DeploymentOptions().setConfig(config);
+                vertx.deployVerticle(command.aggregateIdentity().type, options, ar2 -> {
+                    if (ar2.succeeded()) {
+                        LOGGER.info(String.format("Deployment of %s succeeded", command.aggregateIdentity()));
+                        if (config.containsKey("replay")) {
+                            sendReplayEventCommand(command, eventsToReplay);
+                        } else {
+                            // when verticle is deployed, send a create message to it
+                            issueCommand(command);
+                        }
+
+                    } else {
+                        LOGGER.error(String.format("Deployment of %s failed: %s", command.aggregateIdentity(),
+                                ar2.cause().getLocalizedMessage()));
+                    }
+                });
             } else {
-                LOGGER.error(String.format("deployment of %s failed", command.aggregateIdentity()));
+                // What to do in this case?
             }
         });
+
+    }
+
+    private void sendReplayEventCommand(Command initialCommand, final List<Event> eventsToReplay) {
+        AggregateIdentity id = initialCommand.aggregateIdentity();
+        LOGGER.info(String.format("Replaying %d events for %s", eventsToReplay.size(), id));
+        ReplayEventsCommand replayEventsCommand = new ReplayEventsCommand(id, eventsToReplay);
+        DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", replayEventsCommand.getClass().getName());
+        vertx.eventBus().send(vertxAddressFor(replayEventsCommand), JsonObject.mapFrom(replayEventsCommand), options,
+                ar3 -> {
+                    if (ar3.succeeded()) {
+                        issueCommand(initialCommand);
+                    } else {
+                        LOGGER.error(String.format("Replaying event(s) for %s failed: %s", id, ar3.cause()
+                                .getLocalizedMessage()));
+                    }
+                });
     }
 
     public void publishEvent(Event event) {
@@ -93,7 +127,7 @@ public class DomainModel {
     }
 
     public void persistAndPublishEvents(List<Event> events) {
-        // TODO persist
+        // TODO persist needs to be async
         persistEvents(events);
         publishEvents(events);
     }
@@ -104,16 +138,15 @@ public class DomainModel {
             if (ar.succeeded()) {
                 LoadEventResponse response = null;
                 try {
-                    response = ((JsonObject)ar.result().body()).mapTo(LoadEventResponse.class);
-                } catch (Exception e){
-                    System.err.println(ar.result().body());
-                    System.err.println(e.getLocalizedMessage());
+                    response = ((JsonObject) ar.result().body()).mapTo(LoadEventResponse.class);
+                } catch (Exception e) {
+                    LOGGER.error(ar.result().body().toString());
+                    LOGGER.error(e.getLocalizedMessage());
                 }
 
-                handler.handle(Future.succeededFuture(response) );
-                LOGGER.info( response.toString() );
+                handler.handle(Future.succeededFuture(response));
             } else {
-                LOGGER.error(String.format("failed to load events: %s", ar.cause().getLocalizedMessage()));
+                LOGGER.error(String.format("Failed to load events: %s", ar.cause().getLocalizedMessage()));
             }
         });
     }
@@ -142,4 +175,5 @@ public class DomainModel {
                 event.aggregateIdentity().id
         );
     }
+
 }

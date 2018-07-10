@@ -7,7 +7,7 @@ import io.openinnovationlabs.domain.Command;
 /**
  * CreateOpportunity
  */
-public class CreateOpportunity implements Command<OpportunityId> {
+public class CreateOpportunity implements Command {
 
     public final String customerName;
     public final String opportunityType;

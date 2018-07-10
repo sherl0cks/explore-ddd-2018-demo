@@ -10,13 +10,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.rmi.runtime.Log;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 /**
  * OpportunityTest
@@ -48,29 +45,30 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
         // then await success
         // there is message listener that will complete the async context when the event is received
         // else the test will fail
-        async.awaitSuccess(1000);
-
-        testConsumer.unregister();
+        async.awaitSuccess(2000);
 
     }
 
+    /**
+     * This test will exercise the event replay functionality
+     * @param context
+     */
     @Test
     public void shouldWinAnOpportunity(TestContext context) {
         // given an opportunity for customer acme
         Async async = context.async();
-
-        OpportunityCreated event = new OpportunityCreated(new OpportunityId("1"), "acme", "residency", Instant.now().minus( 1, ChronoUnit.HOURS).toString(), 0);
+        // and some events in the past
+        OpportunityCreated event = new OpportunityCreated(new OpportunityId("1"), "acme", "residency", Instant.now().minus(1, ChronoUnit.HOURS).toString(), 0);
         domainModel.persistEvents(Arrays.asList(event));
 
         OpportunityId opportunityId = new OpportunityId("1");
         MessageConsumer<JsonObject> testConsumer = domainModel.subscribeToEventStream(opportunityId);
         testConsumer.handler(message -> {
             if (messageBodyOfType(message, OpportunityWon.class)) {
-                LOGGER.info(SimpleEventLogger.log(message.body().mapTo(OpportunityWon.class)) );
+                LOGGER.info(SimpleEventLogger.log(message.body().mapTo(OpportunityWon.class)));
 
-
-                domainModel.loadEvents(opportunityId, ar ->{
-                    if (ar.succeeded()){
+                domainModel.loadEvents(opportunityId, ar -> {
+                    if (ar.succeeded()) {
                         Assert.assertEquals(2, ar.result().events.size());
                     }
                     async.complete();
@@ -84,7 +82,7 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
 
 
         // then create an opportunity won event
-        async.awaitSuccess(1000);
-        testConsumer.unregister();
+        // and make sure the proper events were persisted
+        async.awaitSuccess(2000);
     }
 }

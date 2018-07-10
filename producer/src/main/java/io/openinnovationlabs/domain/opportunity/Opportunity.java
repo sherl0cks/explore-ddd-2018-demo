@@ -44,7 +44,7 @@ public class Opportunity extends Aggregate {
     }
 
     public List<Event> process(WinOpportunity command) {
-        if (status.equals("fff")){
+        if (status.isEmpty()){
             // TODO better exception than this
             throw new RuntimeException("Opportunity must be created first");
         } else if (status.equals("won")) {

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.openinnovationlabs.domain.Command;
 
-public class WinOpportunity implements Command<OpportunityId> {
+public class WinOpportunity implements Command {
     public final OpportunityId opportunityId;
 
     @JsonCreator()

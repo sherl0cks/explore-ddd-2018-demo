@@ -5,19 +5,24 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 // TODO should probably be a service proxy
 public class EventStore extends AbstractVerticle {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(EventStore.class);
 
     private AppendOnlyStore store;
 
     @Override
     public void start() throws Exception {
         String appendOnlyStoreType = config().getString("appendOnlyStoreType");
-        if ( appendOnlyStoreType.equals("InMemory") ){
+        if (appendOnlyStoreType.equals("InMemory")) {
             this.store = new InMemoryAppendOnlyStore();
         } else {
-            new IllegalStateException(String.format("appendOnlyStoreType %s currently not implemented",appendOnlyStoreType));
+            new IllegalStateException(String.format("appendOnlyStoreType %s currently not implemented", appendOnlyStoreType));
         }
         MessageConsumer<JsonObject> appendConsumer = vertx.eventBus().consumer("EventStore-Append");
         appendConsumer.handler(message -> append(message));
@@ -27,6 +32,8 @@ public class EventStore extends AbstractVerticle {
 
         MessageConsumer<JsonObject> clearEventsConsumer = vertx.eventBus().consumer("EventStore-Clear");
         clearEventsConsumer.handler(message -> clearEvents(message));
+
+        LOGGER.info("Event Store is up");
     }
 
 
@@ -41,8 +48,8 @@ public class EventStore extends AbstractVerticle {
         message.reply(JsonObject.mapFrom(response));
     }
 
-    public void clearEvents(Message<JsonObject> message){
-        if (config().getString("appendOnlyStoreType").equals("InMemory")){
+    public void clearEvents(Message<JsonObject> message) {
+        if (config().getString("appendOnlyStoreType").equals("InMemory")) {
             ((InMemoryAppendOnlyStore) store).clear();
             message.reply("success");
         } else {
