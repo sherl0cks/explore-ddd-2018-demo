@@ -62,13 +62,14 @@ public class DomainModel {
      */
     private void deployAggregrateVerticle(Command command) {
         loadEvents(command.aggregateIdentity(), ar1 -> {
-
             if (ar1.succeeded()) {
                 JsonObject config = new JsonObject().put("id", command.aggregateIdentity().id);
                 final List<Event> eventsToReplay = ar1.result().events;
                 if (eventsToReplay.size() > 0) {
                     config.put("replay", true);
                 }
+                LOGGER.info(String.format("%s :: %d event(s) loaded", command.aggregateIdentity(), eventsToReplay.size
+                        ()));
 
                 DeploymentOptions options = new DeploymentOptions().setConfig(config);
                 vertx.deployVerticle(command.aggregateIdentity().type, options, ar2 -> {
@@ -123,6 +124,12 @@ public class DomainModel {
         AppendEventsCommand command = new AppendEventsCommand(events);
         vertx.eventBus().send("EventStore-Append", JsonObject.mapFrom(command));
         handler.handle(Future.succeededFuture());
+        // TODO wtf is going on here?
+// , ar -> {
+//            LOGGER.info("ACK");
+//            handler.handle( Future.succeededFuture("") );
+//        });
+
     }
 
     public void persistAndPublishEvents(List<Event> events) {
@@ -147,7 +154,6 @@ public class DomainModel {
                     LOGGER.error(ar.result().body().toString());
                     LOGGER.error(e.getLocalizedMessage());
                 }
-
                 handler.handle(Future.succeededFuture(response));
             } else {
                 LOGGER.error(String.format("Failed to load events: %s", ar.cause().getLocalizedMessage()));

@@ -40,6 +40,8 @@ public class EventStore extends AbstractVerticle {
     public void append(Message<JsonObject> message) {
         AppendEventsCommand command = message.body().mapTo(AppendEventsCommand.class);
         store.append(command.events);
+        LOGGER.info(String.format("Events appended %d",command.events.size()));
+        message.reply("complete");
     }
 
     public void loadEvents(Message<JsonObject> message) {
