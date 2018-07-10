@@ -48,6 +48,7 @@ public class EventStore extends AbstractVerticle {
         LoadEventsCommand command = message.body().mapTo(LoadEventsCommand.class);
         LoadEventResponse response = new LoadEventResponse(store.loadEvents(command.aggregateIdentity));
         message.reply(JsonObject.mapFrom(response));
+        LOGGER.info("reply");
     }
 
     public void clearEvents(Message<JsonObject> message) {
