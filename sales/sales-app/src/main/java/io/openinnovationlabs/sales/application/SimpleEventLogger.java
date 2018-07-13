@@ -11,7 +11,7 @@ import java.util.List;
 public class SimpleEventLogger {
 
     public static String log(Event e){
-        return String.format("%s :: %s :: %d", e.aggregateIdentity(), e.getClass().getSimpleName(), e.index());
+        return String.format("%s :: %s :: %d", e.aggregateIdentity(), e.getClass().getSimpleName(), e.stream_index());
     }
 
     public static String log(List<Event> events){

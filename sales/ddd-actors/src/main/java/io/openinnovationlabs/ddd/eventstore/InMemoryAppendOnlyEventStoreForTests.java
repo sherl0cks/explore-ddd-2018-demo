@@ -10,17 +10,29 @@ import io.vertx.core.Handler;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InMemoryAppendOnlyStore implements AppendOnlyStore {
+/**
+ * This is a simple impl for testing purposes only
+ */
+public class InMemoryAppendOnlyEventStoreForTests extends AbstractEventStore implements AppendOnlyStore {
 
     private List<Event> dataStore = new ArrayList<>();
 
     @Override
-    public void append(List<Event> events) {
-        dataStore.addAll(events);
+    public void start() throws Exception {
+        initializeEventBusConsumers();
     }
 
     @Override
-    public List<Event> loadEvents(AggregateIdentity aggregateIdentity) {
+    public Future<Void> append(List<Event> events) {
+        Future future = Future.future();
+        dataStore.addAll(events);
+        future.complete();
+        return future;
+    }
+
+    @Override
+    public Future<List<Event>> loadEvents(AggregateIdentity aggregateIdentity) {
+        Future<List<Event>> future = Future.future();
         List<Event> resultSet = new ArrayList<>();
         for (Event e : dataStore){
             AggregateIdentity aggregateIdentity1 = e.aggregateIdentity();
@@ -28,10 +40,8 @@ public class InMemoryAppendOnlyStore implements AppendOnlyStore {
                 resultSet.add(e);
             }
         }
-        return resultSet;
+        future.complete(resultSet);
+        return future;
     }
 
-    public void clear(){
-        dataStore.clear();
-    }
 }

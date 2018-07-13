@@ -25,7 +25,7 @@ import java.util.List;
 public abstract class Aggregate extends AbstractVerticle {
 
     private static Logger LOGGER = LoggerFactory.getLogger(Aggregate.class);
-    protected long eventIndex = 0;
+    protected long eventStreamIndex = 0;
     protected Boolean replaying;
     private String id;
     private DomainModel domainModel; // TODO perhaps this should be a singleton?
@@ -83,10 +83,16 @@ public abstract class Aggregate extends AbstractVerticle {
         if (events.get(events.size() - 1) instanceof EventsReplayed) {
             // do not persist or publish events, we're just replaying the event stream
             // the event applier handles mutating state
+
+            LOGGER.debug(String.format("%s :: replay complete.", events.get(0).aggregateIdentity()));
+            message.reply("complete"); // is this the right place to ACK?
         } else {
-            domainModel.persistAndPublishEvents(events);
+            domainModel.persistAndPublishEvents(events).setHandler( ar-> {
+                LOGGER.debug(String.format("%s :: command processing complete.", events.get(0).aggregateIdentity()));
+                message.reply("complete"); // is this the right place to ACK?
+            });
         }
-        message.reply("complete"); // is this the right place to ACK?
+
     }
 
     private Object mapToCommandObject(Message<JsonObject> message) {
@@ -102,7 +108,8 @@ public abstract class Aggregate extends AbstractVerticle {
 
     // TODO this ought to have more robust error handling
     private List<Event> processCommand(Command command) {
-        LOGGER.debug(String.format("%s :: %s received ", command.aggregateIdentity(), command.getClass().getSimpleName
+        LOGGER.debug(String.format("%s :: command received %s  ", command.aggregateIdentity(), command.getClass()
+                .getSimpleName
                 ()));
         List<Event> events = null;
 
@@ -147,7 +154,6 @@ public abstract class Aggregate extends AbstractVerticle {
 
     public void apply(EventsReplayed event) {
         this.replaying = false;
-        LOGGER.debug(String.format("%s :: replay complete", event.aggregateIdentity));
     }
 
 }

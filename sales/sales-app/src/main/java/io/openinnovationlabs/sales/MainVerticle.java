@@ -1,6 +1,6 @@
 package io.openinnovationlabs.sales;
 
-import io.openinnovationlabs.ddd.eventstore.EventStore;
+import io.openinnovationlabs.ddd.eventstore.AbstractEventStore;
 import io.openinnovationlabs.sales.adapters.HttpAdapter;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
@@ -18,7 +18,7 @@ public class MainVerticle extends AbstractVerticle {
 
     private Future deployEventStore(DeploymentOptions options) {
         Future future = Future.future();
-        vertx.deployVerticle(EventStore.class, options, future.completer());
+        vertx.deployVerticle(AbstractEventStore.class, options, future.completer());
         return future;
     }
 

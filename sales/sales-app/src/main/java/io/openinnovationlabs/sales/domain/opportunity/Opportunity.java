@@ -37,7 +37,7 @@ public class Opportunity extends Aggregate {
                             command.customerName,
                             command.opportunityType,
                             Instant.now().toString(),
-                            eventIndex++
+                            eventStreamIndex++
                     )
             );
             return events;
@@ -55,7 +55,7 @@ public class Opportunity extends Aggregate {
                     new OpportunityWon(
                             command.opportunityId,
                             Instant.now().toString(),
-                            eventIndex++
+                            eventStreamIndex++
                     )
             );
             return events;

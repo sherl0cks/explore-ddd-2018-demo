@@ -31,7 +31,7 @@ public class EventsReplayed implements Event {
     }
 
     @Override
-    public long index() {
+    public long stream_index() {
         return -1;
     }
 }

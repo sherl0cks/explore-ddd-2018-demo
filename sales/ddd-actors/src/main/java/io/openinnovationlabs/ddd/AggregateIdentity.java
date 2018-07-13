@@ -1,10 +1,12 @@
 package io.openinnovationlabs.ddd;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS,
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
-public abstract class AggregateIdentity {
+public class AggregateIdentity {
     /**
      * TODO enforce a more sophisticated ID here
      */
@@ -12,7 +14,9 @@ public abstract class AggregateIdentity {
     public final Class type;
 
 
-    public AggregateIdentity(String id, Class type) {
+    @JsonCreator
+    public AggregateIdentity(@JsonProperty("id") String id,
+                             @JsonProperty("type") Class type) {
         this.id = id;
         this.type = type;
     }
@@ -37,6 +41,6 @@ public abstract class AggregateIdentity {
 
     @Override
     public String toString() {
-        return type.getSimpleName() + " " + id;
+        return type.getSimpleName() + "-" + id;
     }
 }

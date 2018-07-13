@@ -13,7 +13,7 @@ public interface Event {
 
     AggregateIdentity aggregateIdentity();
 
-    long index();
+    long stream_index();
 
 
 }

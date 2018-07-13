@@ -38,7 +38,7 @@ To update your booster:
 +
 NOTE: To stop your running booster in a Linux or macOS terminal, use `CTRL+C`. In a Windows command prompt, you can use `CTRL + Break(pause)`.
 
-. Make your change (e.g. edit `src/main/resources/webroot/index.html`).
+. Make your change (e.g. edit `src/main/resources/webroot/streamIndex.html`).
 . Restart your booster.
 . Confirm your change appears.
 

@@ -2,6 +2,7 @@ package io.openinnovationlabs.sales.domain.opportunity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.openinnovationlabs.ddd.AbstractBaseEvent;
 import io.openinnovationlabs.ddd.AggregateIdentity;
 import io.openinnovationlabs.ddd.Event;
 
@@ -10,14 +11,10 @@ import java.time.Instant;
 /**
  * OpportunityEvent
  */
-public class OpportunityCreated implements Event {
+public class OpportunityCreated extends AbstractBaseEvent {
 
     public final String customerName;
     public final String opportunityType;
-    public final Instant occurredOn;
-    public final OpportunityId opportunityId;
-
-    public final long index;
 
     @JsonProperty("newStatus")
     public final String newStatus = "created";
@@ -27,28 +24,11 @@ public class OpportunityCreated implements Event {
                               @JsonProperty("customerName") String customerName,
                               @JsonProperty("opportunityType") String opportunityType,
                               @JsonProperty("occurredOn") String occurredOn,
-                              @JsonProperty("index") long index
+                              @JsonProperty("streamIndex") long stream_index
     ) {
-        this.occurredOn = Instant.parse(occurredOn);
-        this.opportunityId = opportunityId;
+        super(opportunityId, occurredOn, stream_index);
         this.customerName = customerName;
         this.opportunityType = opportunityType;
-        this.index = index;
     }
 
-
-    @Override
-    public Instant occurredOn() {
-        return occurredOn;
-    }
-
-    @Override
-    public AggregateIdentity aggregateIdentity() {
-        return opportunityId;
-    }
-
-    @Override
-    public long index() {
-        return index;
-    }
 }

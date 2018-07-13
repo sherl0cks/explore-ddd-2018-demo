@@ -1,7 +1,8 @@
 package io.openinnovationlabs.sales.domain;
 
 import io.openinnovationlabs.ddd.DomainModel;
-import io.openinnovationlabs.ddd.eventstore.EventStore;
+import io.openinnovationlabs.ddd.eventstore.AbstractEventStore;
+import io.openinnovationlabs.ddd.eventstore.InMemoryAppendOnlyEventStoreForTests;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
@@ -31,8 +32,8 @@ public abstract class AbstractDomainModelTest {
     public void beforeTest(TestContext context) {
         vertx = Vertx.vertx();
         domainModel = new DomainModel(vertx);
-        JsonObject jsonObject = new JsonObject().put("appendOnlyStoreType", "InMemory");
-        vertx.deployVerticle(EventStore.class, new DeploymentOptions().setConfig(jsonObject), context.asyncAssertSuccess());
+        vertx.deployVerticle(InMemoryAppendOnlyEventStoreForTests.class, new DeploymentOptions(), context
+                .asyncAssertSuccess());
     }
 
     public boolean messageBodyOfType(Message<JsonObject> message, Class type) {

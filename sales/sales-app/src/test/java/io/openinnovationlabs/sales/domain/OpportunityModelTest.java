@@ -68,12 +68,9 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
         MessageConsumer<JsonObject> testConsumer = domainModel.subscribeToEventStream(opportunityId);
         testConsumer.handler(message -> {
             if (messageBodyOfType(message, OpportunityWon.class)) {
-                LOGGER.info(SimpleEventLogger.log(message.body().mapTo(OpportunityWon.class)));
+                LOGGER.info(message.body().mapTo(OpportunityWon.class).toString());
 
-//                domainModel.loadEvents(opportunityId, ar -> {
-//                    if (ar.succeeded()) {
-//                        Assert.assertEquals(2, ar.result().events.size());
-//                    }
+
                 async.complete();
                 //});
             }
@@ -82,10 +79,19 @@ public class OpportunityModelTest extends AbstractDomainModelTest {
 
         // given an opportunity for customer acme
         OpportunityCreated event = new OpportunityCreated(new OpportunityId("1"), "acme", "residency", Instant.now().minus(1, ChronoUnit.HOURS).toString(), 0);
-        Future f = domainModel.persistEvents(Arrays.asList(event));
+        domainModel.persistEvents(Arrays.asList(event)).setHandler( ar -> {
 
-        // when
-        domainModel.issueCommand(new WinOpportunity(new OpportunityId("1")));
+            if ( ar.succeeded() ){
+                // when
+                domainModel.issueCommand(new WinOpportunity(new OpportunityId("1")));
+            } else {
+                context.fail(ar.cause().toString());
+                async.complete();
+            }
+
+        });
+
+
 
         // then
         async.awaitSuccess(2000);

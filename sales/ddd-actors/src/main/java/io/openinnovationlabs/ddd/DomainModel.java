@@ -1,7 +1,7 @@
 package io.openinnovationlabs.ddd;
 
+import io.openinnovationlabs.ddd.eventstore.AbstractEventStore;
 import io.openinnovationlabs.ddd.eventstore.AppendEventsCommand;
-import io.openinnovationlabs.ddd.eventstore.EventStore;
 import io.openinnovationlabs.ddd.eventstore.LoadEventResponse;
 import io.openinnovationlabs.ddd.eventstore.LoadEventsCommand;
 import io.vertx.core.*;
@@ -79,7 +79,7 @@ public class DomainModel {
         DeploymentOptions options = new DeploymentOptions().setConfig(config);
         vertx.deployVerticle(command.aggregateIdentity().type, options, ar -> {
             if (ar.succeeded()) {
-                LOGGER.info(String.format("%s :: deployment succeeded", command.aggregateIdentity()));
+                LOGGER.info(String.format("%s :: verticle deployment succeeded", command.aggregateIdentity()));
                 future.complete(ar.result());
             } else {
                 future.fail(ar.cause());
@@ -88,15 +88,23 @@ public class DomainModel {
         return future;
     }
 
-    private Future sendReplayEventsCommand(AggregateIdentity aggregateIdentity, LoadEventResponse response) {
-        Future future = Future.future();
+    private Future<Void> sendReplayEventsCommand(AggregateIdentity aggregateIdentity, LoadEventResponse response) {
+        Future<Void> future = Future.future();
         if (response.events.size() == 0) {
             future.complete();
         } else {
             ReplayEventsCommand replayEventsCommand = new ReplayEventsCommand(aggregateIdentity, response.events);
             DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", replayEventsCommand.getClass().getName());
-            vertx.eventBus().send(vertxAddressFor(replayEventsCommand), JsonObject.mapFrom(replayEventsCommand), options,
-                    future.completer());
+            vertx.eventBus().send(vertxAddressFor(replayEventsCommand), JsonObject.mapFrom(replayEventsCommand),
+                    options, ar -> {
+                        if (ar.succeeded()) {
+                            LOGGER.debug(String.format("%s :: replay command ACK received", aggregateIdentity));
+                            future.complete();
+                        } else {
+                            LOGGER.debug(String.format("%s :: replay command message send failed", aggregateIdentity));
+                            future.fail(ar.cause());
+                        }
+                    });
         }
         return future;
     }
@@ -107,8 +115,8 @@ public class DomainModel {
     }
 
     // TODO perhaps this should be done another way, given publish is a sync API
-    public Future publishEvents(List<Event> events) {
-        Future future = Future.future();
+    public Future<Void> publishEvents(List<Event> events) {
+        Future<Void> future = Future.future();
         for (Event e : events) {
             publishEvent(e);
         }
@@ -116,23 +124,26 @@ public class DomainModel {
         return future;
     }
 
-    public Future persistEvents(List<Event> events) {
-        Future future = Future.future();
+    public Future<Boolean> persistEvents(List<Event> events) {
+        Future<Boolean> future = Future.future();
         AppendEventsCommand command = new AppendEventsCommand(events);
-        vertx.eventBus().send(EventStore.APPEND_ADDRESS, JsonObject.mapFrom(command), ar -> {
+        vertx.eventBus().send(AbstractEventStore.APPEND_ADDRESS, JsonObject.mapFrom(command), ar -> {
             if (ar.succeeded()) {
-                LOGGER.debug("Events persisted");
-                future.complete();
+                if ( ((String) ar.result().body()).equals("success")){
+                    future.complete();
+                } else{
+                    future.fail(((String) ar.result().body()));
+                }
+
             } else {
-                LOGGER.error(String.format("Failed to persist events %s", ar.cause().getLocalizedMessage()));
                 future.fail(ar.cause());
             }
         });
         return future;
     }
 
-    public Future persistAndPublishEvents(List<Event> events) {
-        Future future = Future.future();
+    public Future<Void> persistAndPublishEvents(List<Event> events) {
+        Future<Void> future = Future.future();
         persistEvents(events).compose(v -> publishEvents(events)).setHandler(future.completer());
         return future;
     }
@@ -140,7 +151,7 @@ public class DomainModel {
     public Future<LoadEventResponse> loadEvents(AggregateIdentity aggregateIdentity) {
         Future<LoadEventResponse> future = Future.future();
         LoadEventsCommand command = new LoadEventsCommand(aggregateIdentity);
-        vertx.eventBus().send(EventStore.LOAD_EVENT_ADDRESS, JsonObject.mapFrom(command), ar -> {
+        vertx.eventBus().send(AbstractEventStore.LOAD_EVENT_ADDRESS, JsonObject.mapFrom(command), ar -> {
             if (ar.succeeded()) {
                 LoadEventResponse response = null;
                 try {
