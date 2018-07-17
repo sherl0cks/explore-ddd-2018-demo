@@ -2,18 +2,15 @@ package io.openinnovationlabs.sales.domain.opportunity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.openinnovationlabs.ddd.AbstractBaseCommand;
+import io.openinnovationlabs.ddd.AggregateIdentity;
 import io.openinnovationlabs.ddd.Command;
 
-public class WinOpportunity implements Command {
-    public final OpportunityId opportunityId;
+public class WinOpportunity extends AbstractBaseCommand {
 
     @JsonCreator()
-    public WinOpportunity(@JsonProperty("opportunityId") OpportunityId opportunityId) {
-        this.opportunityId = opportunityId;
+    public WinOpportunity(@JsonProperty("opportunityId") AggregateIdentity opportunityId) {
+        super(opportunityId);
     }
 
-    @Override
-    public OpportunityId aggregateIdentity() {
-        return opportunityId;
-    }
 }

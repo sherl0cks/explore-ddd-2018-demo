@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.openinnovationlabs.ddd.AbstractBaseEvent;
 import io.openinnovationlabs.ddd.AggregateIdentity;
-import io.openinnovationlabs.ddd.Event;
 
-import java.time.Instant;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * OpportunityEvent
  */
+
+
 public class OpportunityCreated extends AbstractBaseEvent {
 
     public final String customerName;
@@ -20,7 +21,7 @@ public class OpportunityCreated extends AbstractBaseEvent {
     public final String newStatus = "created";
 
     @JsonCreator
-    public OpportunityCreated(@JsonProperty("opportunityId") OpportunityId opportunityId,
+    public OpportunityCreated(@JsonProperty("opportunityId") AggregateIdentity opportunityId,
                               @JsonProperty("customerName") String customerName,
                               @JsonProperty("opportunityType") String opportunityType,
                               @JsonProperty("occurredOn") String occurredOn,

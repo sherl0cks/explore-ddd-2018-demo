@@ -16,7 +16,7 @@
   <name>Open Innovation Labs Sales App</name>
 
   <properties>
-    <vertx.verticle>io.openinnovationlabs.sales.MainVerticle</vertx.verticle>
+    <vertx.verticle>io.openinnovationlabs.sales.SalesApplication</vertx.verticle>
 
     <!-- vert / kafka / debezium versions are very specific or 
     we get classpath issues spinning up the test kafka cluster--> 
@@ -47,14 +47,25 @@
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
 
+
+    <!-- Spring -->
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-spring-boot-starter-jaxrs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+    </dependency>
+
 
     <!-- logging -->
     <dependency>
@@ -93,64 +104,63 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.jayway.restassured</groupId>
-      <artifactId>rest-assured</artifactId>
-      <version>2.9.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <version>3.0.5</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
-      <artifactId>arquillian-junit-container</artifactId>
-      <version>1.1.12.Final</version>
+      <artifactId>arquillian-junit-standalone</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.arquillian.cube</groupId>
       <artifactId>arquillian-cube-openshift</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <artifactId>undertow-core</artifactId>
           <groupId>io.undertow</groupId>
+          <artifactId>undertow-core</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>openshift-client</artifactId>
       <version>1.4.34</version>
       <scope>test</scope>
     </dependency>
+
+
+    <!--  Spring Boot Developer Tools  -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <optional>true</optional>
+    </dependency>
+
   </dependencies>
 
 
   <build>
     <plugins>
       <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>vertx-maven-plugin</artifactId>
-        <version>${vertx-maven-plugin.version}</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration/>
         <executions>
           <execution>
-            <id>vmp</id>
             <goals>
-              <goal>initialize</goal>
-              <goal>package</goal>
+              <goal>repackage</goal>
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <redeploy>true</redeploy>
-        </configuration>
       </plugin>
     </plugins>
   </build>

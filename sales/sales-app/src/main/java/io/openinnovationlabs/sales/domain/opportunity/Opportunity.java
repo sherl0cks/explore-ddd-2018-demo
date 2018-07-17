@@ -33,7 +33,7 @@ public class Opportunity extends Aggregate {
         } else {
             List<Event> events = Arrays.asList(
                     new OpportunityCreated(
-                            command.opportunityId,
+                            command.aggregateIdentity(),
                             command.customerName,
                             command.opportunityType,
                             Instant.now().toString(),
@@ -53,7 +53,7 @@ public class Opportunity extends Aggregate {
         } else {
             List<Event> events = Arrays.asList(
                     new OpportunityWon(
-                            command.opportunityId,
+                            command.aggregateIdentity(),
                             Instant.now().toString(),
                             eventStreamIndex++
                     )

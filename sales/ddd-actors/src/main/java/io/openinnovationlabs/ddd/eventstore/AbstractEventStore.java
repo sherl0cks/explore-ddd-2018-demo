@@ -52,6 +52,5 @@ public abstract class AbstractEventStore extends AbstractVerticle implements App
     protected void initializeEventBusConsumers() {
         vertx.eventBus().<JsonObject>consumer(APPEND_ADDRESS).handler(this::append);
         vertx.eventBus().<JsonObject>consumer(LOAD_EVENT_ADDRESS).handler(this::loadEvents);
-        LOGGER.debug("EventStore addresses subscribed");
     }
 }

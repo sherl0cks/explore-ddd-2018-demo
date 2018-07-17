@@ -2,7 +2,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%-42(%d{HH:mm:ss.SSS} [%thread]) %highlight(%-5level) %30.30logger{30} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) %50.50logger{50} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -10,7 +10,7 @@
     <logger name="io.vertx" level="info"/>
     <logger name="io.openinnovationlabs" level="debug"/>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="STDOUT"/>
     </root>
 

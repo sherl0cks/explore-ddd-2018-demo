@@ -96,6 +96,7 @@ public abstract class Aggregate extends AbstractVerticle {
     }
 
     private Object mapToCommandObject(Message<JsonObject> message) {
+        LOGGER.trace(message.body().toString());
         String commandClassname = message.headers().get("commandClassname");
         Class<?> commandClass = null;
         try {

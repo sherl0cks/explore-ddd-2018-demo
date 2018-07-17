@@ -42,7 +42,9 @@ public class DomainModel {
 
     public void issueCommand(Command command) {
         DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", command.getClass().getName());
-        vertx.eventBus().send(vertxAddressFor(command), JsonObject.mapFrom(command), options, ar -> {
+        JsonObject jsonObject = JsonObject.mapFrom(command);
+        LOGGER.trace(jsonObject.toString());
+        vertx.eventBus().send(vertxAddressFor(command), jsonObject, options, ar -> {
             if (ar.failed()) {
                 if (ar.cause() instanceof ReplyException) {
                     if (((ReplyException) ar.cause()).failureType().equals(ReplyFailure.NO_HANDLERS)) {
@@ -63,10 +65,12 @@ public class DomainModel {
     }
 
     // TODO perhaps merge with other send command class?
-    public Future sendCommand(Command command) {
+    private Future sendCommand(Command command) {
         Future future = Future.future();
         DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", command.getClass().getName());
-        vertx.eventBus().send(vertxAddressFor(command), JsonObject.mapFrom(command), options, future.completer());
+        JsonObject jsonObject = JsonObject.mapFrom(command);
+        LOGGER.trace(jsonObject.toString());
+        vertx.eventBus().send(vertxAddressFor(command), jsonObject, options, future.completer());
         return future;
     }
 
