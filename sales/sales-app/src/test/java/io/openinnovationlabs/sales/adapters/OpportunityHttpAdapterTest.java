@@ -52,7 +52,7 @@ public class OpportunityHttpAdapterTest {
 
         WinOpportunity winOpportunity = new WinOpportunity(response.header("Location"));
         Response response2 = given().body(winOpportunity).contentType("application/json").
-                when().post("/opportunities/" + response.header("Location") + "/commands")
+                when().post("/opportunities/" + response.header("Location") )
                 .then()
                 .statusCode(200)
                 .extract().response();
@@ -70,7 +70,7 @@ public class OpportunityHttpAdapterTest {
         String id = UUID.randomUUID().toString();
         WinOpportunity winOpportunity = new WinOpportunity(id);
         given().body(winOpportunity).contentType("application/json").
-                when().post("/opportunities/" + id + "/commands")
+                when().post("/opportunities/" + id)
                 .then()
                 .statusCode(400);
     }

@@ -51,7 +51,7 @@ public class OpportunityHttpAdapter {
     }
 
     @POST
-    @Path("/opportunities/{id}/commands")
+    @Path("/opportunities/{id}")
     @Produces("application/json")
     @Consumes("application/json")
     public void executeCommand(Command command,
