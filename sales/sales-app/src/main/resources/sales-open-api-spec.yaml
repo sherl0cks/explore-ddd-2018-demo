@@ -1,0 +1,165 @@
+---
+openapi: 3.0.0
+info:
+  title: Open Innovation Labs Sales
+  contact:
+    name: Justin Holmes
+    url: https://www.redhat.com/en/services/consulting/open-innovation-labs
+    email: jholmes@redhat.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  version: 0.1.0
+paths:
+  /opportunities:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOpportunityCommand'
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+        500:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+  /opportunities/{id}:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+        500:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandProcessingResponse'
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+components:
+  schemas:
+    CommandProcessingResponse:
+      required: []
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        errors:
+          type: array
+          items:
+            type: string
+    Opportunity:
+      required:
+      - name
+      - type
+      - customerName
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        customerName:
+          type: string
+    OpportunityCreatedEvent:
+      required:
+      - foo
+      - opportunity
+      - newStatus
+      - customerName
+      - opportunityName
+      - opportunityType
+      allOf:
+      - $ref: '#/components/schemas/Event'
+      properties:
+        newStatus:
+          type: string
+        customerName:
+          type: string
+        opportunityType:
+          type: string
+        opportunityName:
+          type: string
+    AggregateIdentity:
+      required:
+      - aggregateType
+      - aggregateUUID
+      properties:
+        aggregateType:
+          type: string
+        aggregateUID:
+          type: string
+    WinOpportunityCommand:
+      allOf:
+      - $ref: '#/components/schemas/Command'
+    Command:
+      required:
+      - type
+      properties:
+        type:
+          type: string
+    Event:
+      required:
+      - occurredOn
+      - eventStreamIndex
+      - type
+      - aggregateIdentity
+      properties:
+        occurredOn:
+          type: string
+        eventStreamIndex:
+          type: integer
+        type:
+          type: string
+        aggregateIdentity:
+          $ref: '#/components/schemas/AggregateIdentity'
+    CreateOpportunityCommand:
+      required:
+      - opportunity
+      allOf:
+      - $ref: '#/components/schemas/Command'
+      properties:
+        opportunity:
+          $ref: '#/components/schemas/Opportunity'
+    OpportunityWonEvent:
+      required:
+      - newStatus
+      allOf:
+      - $ref: '#/components/schemas/Event'
+      properties:
+        newStatus:
+          type: string
