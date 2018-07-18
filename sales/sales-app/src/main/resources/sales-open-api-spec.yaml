@@ -10,6 +10,7 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
   version: 0.1.0
+  # influenced by https://www.infoq.com/articles/rest-api-on-cqrs
 paths:
   /opportunities:
     post:
@@ -44,7 +45,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Command'
+              # this list will grow over time, as this end point should support multiple requests
+              oneOf:
+              - $ref: '#/components/schemas/WinOpportunityCommand'
         required: true
       responses:
         200:
@@ -84,7 +87,13 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/Event'
+            # unclear how oneOf or anyOf apply to arrays. anyOf should work, as its less restictive, but that may be the wrong semantic
+            # https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
+            anyOf:
+            - $ref: '#/components/schemas/OpportunityCreatedEvent'
+            - $ref: '#/components/schemas/OpportunityWonEvent'
+            discriminator:
+              propertyName: eventType
         errors:
           type: array
           items:
@@ -142,7 +151,7 @@ components:
       required:
       - occurredOn
       - eventStreamIndex
-      - type
+      - eventType
       - aggregateIdentity
       properties:
         occurredOn:
@@ -153,6 +162,8 @@ components:
           type: string
         aggregateIdentity:
           $ref: '#/components/schemas/AggregateIdentity'
+      discriminator:
+        propertyName: eventType
     CreateOpportunityCommand:
       required:
       - opportunity
