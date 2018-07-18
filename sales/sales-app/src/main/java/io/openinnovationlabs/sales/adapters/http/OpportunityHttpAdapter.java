@@ -1,20 +1,19 @@
 package io.openinnovationlabs.sales.adapters.http;
 
 import io.openinnovationlabs.ddd.DomainModel;
-import io.openinnovationlabs.ddd.Event;
 import io.openinnovationlabs.sales.domain.opportunity.CreateOpportunity;
 import io.openinnovationlabs.sales.domain.opportunity.OpportunityId;
-import org.jboss.logging.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 
 @Path("/")
@@ -40,9 +39,18 @@ public class OpportunityHttpAdapter {
     @Path("/opportunities")
     @Produces("application/json")
     @Consumes("application/json")
-    public Response createOpportunity(CreateOpportunity command) {
-        LOGGER.info(command.toString());
-        return Response.created(URI.create("1")).build();
+    public void createOpportunity(OpportunityDTO opportunityDTO,
+                                      @Suspended final AsyncResponse asyncResponse) {
+
+        CreateOpportunity createOpportunity = opportunityDTO.to(UUID.randomUUID().toString());
+        domainModel.issueCommand( createOpportunity ).setHandler( ar -> {
+            if (ar.succeeded()){
+                asyncResponse.resume(Response.created(URI.create(createOpportunity.aggregateIdentity().id)).build());
+            } else {
+                asyncResponse.resume(Response.serverError());
+            }
+        });
+
     }
 
 

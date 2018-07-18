@@ -1,6 +1,7 @@
 package io.openinnovationlabs.ddd.eventstore;
 
 import io.openinnovationlabs.ddd.Event;
+import io.openinnovationlabs.ddd.CommandProcessingResponse;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -37,12 +38,12 @@ public abstract class AbstractEventStore extends AbstractVerticle implements App
 
         loadEvents(command.aggregateIdentity).setHandler(ar -> {
             if (ar.succeeded()) {
-                LoadEventResponse response = new LoadEventResponse(ar.result());
+                CommandProcessingResponse response = new CommandProcessingResponse(ar.result());
                 message.reply(JsonObject.mapFrom(response));
                 LOGGER.debug("Load events reply");
             } else {
                 LOGGER.error(String.format("Failed to load events: %s", ar.cause().toString()));
-                message.reply(new LoadEventResponse(new ArrayList<Event>()));
+                message.reply(new CommandProcessingResponse(new ArrayList<Event>()));
             }
         });
 

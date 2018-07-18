@@ -2,7 +2,6 @@ package io.openinnovationlabs.ddd;
 
 import io.openinnovationlabs.ddd.eventstore.AbstractEventStore;
 import io.openinnovationlabs.ddd.eventstore.AppendEventsCommand;
-import io.openinnovationlabs.ddd.eventstore.LoadEventResponse;
 import io.openinnovationlabs.ddd.eventstore.LoadEventsCommand;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -40,41 +39,55 @@ public class DomainModel {
         this.vertx = vertx;
     }
 
-    public void issueCommand(Command command) {
-        DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", command.getClass().getName());
-        JsonObject jsonObject = JsonObject.mapFrom(command);
-        LOGGER.trace(jsonObject.toString());
-        vertx.eventBus().send(vertxAddressFor(command), jsonObject, options, ar -> {
+    public Future<CommandProcessingResponse> issueCommand(Command command) {
+        Future<CommandProcessingResponse> future = Future.future();
+        sendCommand(command).setHandler(ar -> {
             if (ar.failed()) {
                 if (ar.cause() instanceof ReplyException) {
                     if (((ReplyException) ar.cause()).failureType().equals(ReplyFailure.NO_HANDLERS)) {
-                        LOGGER.debug(String.format("%s :: no handlers, deploying verticle", command.aggregateIdentity
+                        LOGGER.debug(String.format("%s :: No handlers, deploying verticle", command.aggregateIdentity
                                 ()));
 
 
                         loadEvents(command.aggregateIdentity())
                                 .compose(response -> deploy(command, response)
                                         .compose(v -> sendReplayEventsCommand(command.aggregateIdentity(), response))
-                                        .compose(v -> sendCommand(command)));
+                                        .compose(v -> sendCommand(command))).setHandler(future.completer());
                     }
                 } else {
                     LOGGER.error(ar.cause().getLocalizedMessage());
+                    future.fail(ar.cause());
                 }
+            } else{
+                future.complete(ar.result());
             }
         });
-    }
-
-    // TODO perhaps merge with other send command class?
-    private Future sendCommand(Command command) {
-        Future future = Future.future();
-        DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", command.getClass().getName());
-        JsonObject jsonObject = JsonObject.mapFrom(command);
-        LOGGER.trace(jsonObject.toString());
-        vertx.eventBus().send(vertxAddressFor(command), jsonObject, options, future.completer());
         return future;
     }
 
-    private Future<String> deploy(Command command, LoadEventResponse response) {
+
+    private Future<CommandProcessingResponse> sendCommand(Command command) {
+        Future<CommandProcessingResponse> future = Future.future();
+        DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", command.getClass().getName());
+        JsonObject jsonObject = JsonObject.mapFrom(command);
+        LOGGER.trace(jsonObject.toString());
+        vertx.eventBus().send(vertxAddressFor(command), jsonObject, options, ar -> {
+            if (ar.succeeded()){
+                CommandProcessingResponse response = ((JsonObject) ar.result().body()).mapTo
+                        (CommandProcessingResponse.class);
+                if (response.succeeded()){
+                    future.complete(response);
+                } else {
+                    future.fail(response.exception);
+                }
+            } else {
+                future.fail(ar.cause());
+            }
+        });
+        return future;
+    }
+
+    private Future<String> deploy(Command command, CommandProcessingResponse response) {
         Future<String> future = Future.future();
         JsonObject config = new JsonObject().put("id", command.aggregateIdentity().id);
         if (response.events.size() > 0) {
@@ -83,7 +96,7 @@ public class DomainModel {
         DeploymentOptions options = new DeploymentOptions().setConfig(config);
         vertx.deployVerticle(command.aggregateIdentity().type, options, ar -> {
             if (ar.succeeded()) {
-                LOGGER.info(String.format("%s :: verticle deployment succeeded", command.aggregateIdentity()));
+                LOGGER.info(String.format("%s :: Verticle deployment succeeded", command.aggregateIdentity()));
                 future.complete(ar.result());
             } else {
                 future.fail(ar.cause());
@@ -92,33 +105,26 @@ public class DomainModel {
         return future;
     }
 
-    private Future<Void> sendReplayEventsCommand(AggregateIdentity aggregateIdentity, LoadEventResponse response) {
-        Future<Void> future = Future.future();
+    private Future<CommandProcessingResponse> sendReplayEventsCommand(AggregateIdentity aggregateIdentity, CommandProcessingResponse response) {
+        Future<CommandProcessingResponse> future = Future.future();
         if (response.events.size() == 0) {
             future.complete();
         } else {
             ReplayEventsCommand replayEventsCommand = new ReplayEventsCommand(aggregateIdentity, response.events);
-            DeliveryOptions options = new DeliveryOptions().addHeader("commandClassname", replayEventsCommand.getClass().getName());
-            vertx.eventBus().send(vertxAddressFor(replayEventsCommand), JsonObject.mapFrom(replayEventsCommand),
-                    options, ar -> {
-                        if (ar.succeeded()) {
-                            LOGGER.debug(String.format("%s :: replay command ACK received", aggregateIdentity));
-                            future.complete();
-                        } else {
-                            LOGGER.debug(String.format("%s :: replay command message send failed", aggregateIdentity));
-                            future.fail(ar.cause());
-                        }
-                    });
+            sendCommand(replayEventsCommand).setHandler( future.completer() );
         }
         return future;
     }
 
+    // TODO does publish belong here? should publish be supported via Kafka?
+    @Deprecated
     public void publishEvent(Event event) {
         DeliveryOptions options = new DeliveryOptions().addHeader("eventClassName", event.getClass().getName());
         vertx.eventBus().publish(vertxAddressFor(event), JsonObject.mapFrom(event), options);
     }
 
-    // TODO perhaps this should be done another way, given publish is a sync API
+    // TODO does publish belong here? should publish be supported via Kafka?
+    @Deprecated
     public Future<Void> publishEvents(List<Event> events) {
         Future<Void> future = Future.future();
         for (Event e : events) {
@@ -146,25 +152,27 @@ public class DomainModel {
         return future;
     }
 
+    // TODO does publish belong here? should publish be supported via Kafka?
+    @Deprecated
     public Future<Void> persistAndPublishEvents(List<Event> events) {
         Future<Void> future = Future.future();
         persistEvents(events).compose(v -> publishEvents(events)).setHandler(future.completer());
         return future;
     }
 
-    public Future<LoadEventResponse> loadEvents(AggregateIdentity aggregateIdentity) {
-        Future<LoadEventResponse> future = Future.future();
+    public Future<CommandProcessingResponse> loadEvents(AggregateIdentity aggregateIdentity) {
+        Future<CommandProcessingResponse> future = Future.future();
         LoadEventsCommand command = new LoadEventsCommand(aggregateIdentity);
         vertx.eventBus().send(AbstractEventStore.LOAD_EVENT_ADDRESS, JsonObject.mapFrom(command), ar -> {
             if (ar.succeeded()) {
-                LoadEventResponse response = null;
+                CommandProcessingResponse response = null;
                 try {
-                    response = ((JsonObject) ar.result().body()).mapTo(LoadEventResponse.class);
+                    response = ((JsonObject) ar.result().body()).mapTo(CommandProcessingResponse.class);
                 } catch (Exception e) {
                     LOGGER.error(ar.result().body().toString());
                     LOGGER.error(e.getLocalizedMessage());
                 }
-                LOGGER.debug(String.format("%s :: loaded %d events from event store", aggregateIdentity, response.events
+                LOGGER.debug(String.format("%s :: Loaded %d events from event store", aggregateIdentity, response.events
                         .size()));
                 future.complete(response);
             } else {

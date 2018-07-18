@@ -13,4 +13,7 @@ public class WinOpportunity extends AbstractBaseCommand {
         super(opportunityId);
     }
 
+    public WinOpportunity(String opportunityId){
+        super(new OpportunityId(opportunityId));
+    }
 }

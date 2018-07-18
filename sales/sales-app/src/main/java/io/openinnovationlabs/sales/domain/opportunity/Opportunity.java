@@ -2,6 +2,7 @@ package io.openinnovationlabs.sales.domain.opportunity;
 
 
 import io.openinnovationlabs.ddd.Aggregate;
+import io.openinnovationlabs.ddd.DomainModelException;
 import io.openinnovationlabs.ddd.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,7 @@ public class Opportunity extends Aggregate {
 
     public List<Event> process(WinOpportunity command) {
         if (status.isEmpty()){
-            // TODO better exception than this
-            throw new RuntimeException("Opportunity must be created first");
+            throw new DomainModelException("Opportunity must be created first");
         } else if (status.equals("won")) {
             return Collections.emptyList();
         } else {

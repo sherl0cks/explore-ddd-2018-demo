@@ -78,20 +78,29 @@ public abstract class Aggregate extends AbstractVerticle {
      */
     private void handleCommandMessage(Message<JsonObject> message) {
         Command command = (Command) mapToCommandObject(message);
-        final List<Event> events = processCommand(command);
-        applyEvents(events);
-        if (events.get(events.size() - 1) instanceof EventsReplayed) {
-            // do not persist or publish events, we're just replaying the event stream
-            // the event applier handles mutating state
+        try {
+            final List<Event> events = processCommand(command);
+            applyEvents(events);
 
-            LOGGER.debug(String.format("%s :: replay complete.", events.get(0).aggregateIdentity()));
-            message.reply("complete"); // is this the right place to ACK?
-        } else {
-            domainModel.persistAndPublishEvents(events).setHandler( ar-> {
-                LOGGER.debug(String.format("%s :: command processing complete.", events.get(0).aggregateIdentity()));
-                message.reply("complete"); // is this the right place to ACK?
-            });
+            if (events == null || events.size() == 0) {
+                LOGGER.debug(String.format("%s :: 0 events applied. Command processing complete.", command.aggregateIdentity()));
+                message.reply(JsonObject.mapFrom(new CommandProcessingResponse(new ArrayList<>())));
+            } else if (events.get(events.size() - 1) instanceof EventsReplayed) {
+                // do not persist  events, we're just replaying the event stream
+                // the event applier handles mutating state
+                LOGGER.debug(String.format("%s :: Replay complete.", command.aggregateIdentity()));
+                message.reply(JsonObject.mapFrom(new CommandProcessingResponse(events)));
+            } else {
+                domainModel.persistEvents(events).setHandler(ar -> {
+                    LOGGER.debug(String.format("%s :: Command processing complete.", command.aggregateIdentity()));
+                    message.reply(JsonObject.mapFrom(new CommandProcessingResponse(events)));
+                });
+            }
+        } catch (AggregateVerticleException e) {
+            LOGGER.error(String.format("%s :: Command processing failed. %s", command.aggregateIdentity(), e.getLocalizedMessage()));
+            message.reply(JsonObject.mapFrom(new CommandProcessingResponse(e)));
         }
+
 
     }
 
@@ -107,27 +116,29 @@ public abstract class Aggregate extends AbstractVerticle {
         return message.body().mapTo(commandClass);
     }
 
-    // TODO this ought to have more robust error handling
-    private List<Event> processCommand(Command command) {
-        LOGGER.debug(String.format("%s :: command received %s  ", command.aggregateIdentity(), command.getClass()
-                .getSimpleName
-                ()));
-        List<Event> events = null;
-
+    private List<Event> processCommand(Command command) throws AggregateVerticleException {
+        LOGGER.debug(String.format("%s :: Command received %s  ",
+                command.aggregateIdentity(),
+                command.getClass().getSimpleName())
+        );
         try {
-            events = (List<Event>) getClass().getMethod("process", command.getClass()).invoke(this, command);
-        } catch (IllegalAccessException e1) {
-            e1.printStackTrace();
-        } catch (InvocationTargetException e1) {
-            e1.printStackTrace();
-        } catch (NoSuchMethodException e1) {
-            e1.printStackTrace();
+            List<Event> events = (List<Event>) getClass().getMethod("process", command.getClass()).invoke(this, command);
+            return events;
+        } catch (IllegalAccessException e) {
+            throw new AggregateVerticleException(e);
+        } catch (InvocationTargetException e) {
+            throw new AggregateVerticleException(e.getCause());
+        } catch (NoSuchMethodException e) {
+            throw new AggregateVerticleException(e);
         }
-        return events;
+
     }
 
 
     private void applyEvents(List<Event> events) {
+        if (events == null || events.size() == 0) {
+            return;
+        }
         for (Event e : events) {
             try {
                 getClass().getMethod("apply", e.getClass()).invoke(this, e);
@@ -139,6 +150,7 @@ public abstract class Aggregate extends AbstractVerticle {
                 e1.printStackTrace();
             }
         }
+
         LOGGER.debug(String.format("%s :: %d event(s) applied ", events.get(0).aggregateIdentity(), events.size()));
     }
 
