@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.UUID;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
@@ -34,14 +36,28 @@ public class OpportunityHttpAdapterTest {
     public void shouldCreateOpportunityAndWinOpportunity() {
         OpportunityDTO createOpportunity = ObjectMother.opportunityDTO();
         Response response = given().body(createOpportunity).contentType("application/json")
-                .when().post("/opportunities")
+                .when().post("/opportunities/")
                 .then()
                 .header("Location", notNullValue())
                 .header("Location", not(isEmptyString()))
                 .statusCode(201).extract().response();
 
-        String uuid = response.header("Location");
-        System.err.println(uuid);
+        WinOpportunity winOpportunity = new WinOpportunity(response.header("Location"));
+        given().body(winOpportunity).contentType("application/json").
+                when().post("/opportunities/" + response.header("Location") + "/commands")
+                .then()
+                .statusCode(200);
         //given().body( new WinOpportunity(c))
+    }
+
+    @Test
+    public void shouldFailToWinOpportunity() {
+
+        String id = UUID.randomUUID().toString();
+        WinOpportunity winOpportunity = new WinOpportunity(id);
+        given().body(winOpportunity).contentType("application/json").
+                when().post("/opportunities/" + id + "/commands")
+                .then()
+                .statusCode(400);
     }
 }

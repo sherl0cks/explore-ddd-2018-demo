@@ -96,7 +96,7 @@ public abstract class Aggregate extends AbstractVerticle {
                     message.reply(JsonObject.mapFrom(new CommandProcessingResponse(events)));
                 });
             }
-        } catch (AggregateVerticleException e) {
+        } catch (DomainModelException e) {
             LOGGER.error(String.format("%s :: Command processing failed. %s", command.aggregateIdentity(), e.getLocalizedMessage()));
             message.reply(JsonObject.mapFrom(new CommandProcessingResponse(e)));
         }
@@ -116,7 +116,7 @@ public abstract class Aggregate extends AbstractVerticle {
         return message.body().mapTo(commandClass);
     }
 
-    private List<Event> processCommand(Command command) throws AggregateVerticleException {
+    private List<Event> processCommand(Command command) throws DomainModelException {
         LOGGER.debug(String.format("%s :: Command received %s  ",
                 command.aggregateIdentity(),
                 command.getClass().getSimpleName())
@@ -125,11 +125,11 @@ public abstract class Aggregate extends AbstractVerticle {
             List<Event> events = (List<Event>) getClass().getMethod("process", command.getClass()).invoke(this, command);
             return events;
         } catch (IllegalAccessException e) {
-            throw new AggregateVerticleException(e);
+            throw new DomainModelException(e);
         } catch (InvocationTargetException e) {
-            throw new AggregateVerticleException(e.getCause());
+            throw new DomainModelException(e.getCause());
         } catch (NoSuchMethodException e) {
-            throw new AggregateVerticleException(e);
+            throw new DomainModelException(e);
         }
 
     }
