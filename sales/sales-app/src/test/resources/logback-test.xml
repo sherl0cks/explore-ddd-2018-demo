@@ -8,7 +8,7 @@
 
     <logger name="io.netty" level="warn"/>
     <logger name="io.vertx" level="info"/>
-    <logger name="io.openinnovationlabs" level="debug"/>
+    <logger name="io.openinnovationlabs" level="trace"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

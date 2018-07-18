@@ -18,6 +18,7 @@ public abstract class AbstractEventStore extends AbstractVerticle implements App
 
     @Override
     public void append(Message<JsonObject> message) {
+        LOGGER.trace(String.format("Append Events: %s", message.body().toString()));
         AppendEventsCommand command = message.body().mapTo(AppendEventsCommand.class);
         append(command.events).setHandler(ar -> {
             if ( ar.succeeded() ){

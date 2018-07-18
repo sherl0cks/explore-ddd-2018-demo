@@ -28,14 +28,6 @@ public class OpportunityHttpAdapter {
     @Autowired
     private DomainModel domainModel;
 
-    @GET
-    @Path("/greeting")
-    @Produces("application/json")
-    public String greeting(@QueryParam("name") @DefaultValue("World") String name) {
-
-        domainModel.issueCommand(new CreateOpportunity(new OpportunityId("1"), "test", "residency"));
-        return "hi";
-    }
 
     @POST
     @Path("/opportunities")
@@ -47,7 +39,8 @@ public class OpportunityHttpAdapter {
         CreateOpportunity createOpportunity = opportunityDTO.to(UUID.randomUUID().toString());
         domainModel.issueCommand(createOpportunity).setHandler(ar -> {
             if (ar.succeeded()) {
-                asyncResponse.resume(Response.created(URI.create(createOpportunity.aggregateIdentity().id)).build());
+                asyncResponse.resume(Response.created(URI.create(createOpportunity.aggregateIdentity().id)).entity(ar.result())
+                        .build());
             } else if (ar.cause().getCause() instanceof DomainModelException) {
                 asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(ar.cause().toString()).build());
             } else {
@@ -68,7 +61,7 @@ public class OpportunityHttpAdapter {
         LOGGER.info(id);
         domainModel.issueCommand(command).setHandler(ar -> {
             if (ar.succeeded()) {
-                asyncResponse.resume(Response.ok().build());
+                asyncResponse.resume(Response.ok(ar.result()).build());
             } else if (ar.cause() instanceof DomainModelException) {
                 LOGGER.info(ar.cause().getClass().getName() + "1");
                 asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(ar.cause().toString()).build());

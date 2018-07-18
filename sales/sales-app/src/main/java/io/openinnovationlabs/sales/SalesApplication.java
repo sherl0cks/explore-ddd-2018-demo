@@ -67,7 +67,7 @@ public class SalesApplication {
 
     @Bean
     public JacksonJsonProvider jsonProvider(){
-        JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
+        JacksonJsonProvider jsonProvider = new JacksonJsonProvider(Json.mapper);
         return jsonProvider;
     }
 

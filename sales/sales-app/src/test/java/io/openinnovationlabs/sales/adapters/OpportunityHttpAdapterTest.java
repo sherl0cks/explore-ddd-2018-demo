@@ -1,14 +1,17 @@
 package io.openinnovationlabs.sales.adapters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.openinnovationlabs.ddd.CommandProcessingResponse;
 import io.openinnovationlabs.sales.ObjectMother;
 import io.openinnovationlabs.sales.adapters.http.OpportunityDTO;
-import io.openinnovationlabs.sales.domain.opportunity.CreateOpportunity;
-import io.openinnovationlabs.sales.domain.opportunity.WinOpportunity;
+import io.openinnovationlabs.sales.domain.opportunity.*;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -24,6 +27,7 @@ public class OpportunityHttpAdapterTest {
 
     @Value("${local.server.port}")
     private int port;
+
 
 
     @Before
@@ -42,12 +46,22 @@ public class OpportunityHttpAdapterTest {
                 .header("Location", not(isEmptyString()))
                 .statusCode(201).extract().response();
 
+        CommandProcessingResponse r = response.body().as(CommandProcessingResponse.class);
+        Assert.assertEquals(r.events.size(), 1);
+        Assert.assertTrue(r.events.get(0) instanceof OpportunityCreated);
+
         WinOpportunity winOpportunity = new WinOpportunity(response.header("Location"));
-        given().body(winOpportunity).contentType("application/json").
+        Response response2 = given().body(winOpportunity).contentType("application/json").
                 when().post("/opportunities/" + response.header("Location") + "/commands")
                 .then()
-                .statusCode(200);
-        //given().body( new WinOpportunity(c))
+                .statusCode(200)
+                .extract().response();
+
+        CommandProcessingResponse r2 = response2.body().as(CommandProcessingResponse.class);
+        Assert.assertEquals(r2.events.size(), 1);
+        Assert.assertTrue(r2.events.get(0) instanceof OpportunityWon);
+
+
     }
 
     @Test
