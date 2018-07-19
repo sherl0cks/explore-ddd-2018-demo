@@ -1,4 +1,3 @@
----
 openapi: 3.0.1
 info:
   title: Open Innovation Labs Sales
@@ -85,22 +84,7 @@ paths:
         type: string
 components:
   schemas:
-    CommandProcessingResponse:
-      properties:
-        events:
-          type: array
-          items:
-            # unclear how oneOf or anyOf apply to arrays. anyOf should work, as its less restictive, but that may be the wrong semantic
-            # https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
-            anyOf:
-            - $ref: '#/components/schemas/OpportunityCreatedEvent'
-            - $ref: '#/components/schemas/OpportunityWonEvent'
-            discriminator:
-              propertyName: eventType
-        errors:
-          type: array
-          items:
-            type: string
+
     Opportunity:
       required:
       - name
@@ -113,25 +97,7 @@ components:
           type: string
         customerName:
           type: string
-    OpportunityCreatedEvent:
-      required:
-      - foo
-      - opportunity
-      - newStatus
-      - customerName
-      - opportunityName
-      - opportunityType
-      allOf:
-      - $ref: '#/components/schemas/Event'
-      properties:
-        newStatus:
-          type: string
-        customerName:
-          type: string
-        opportunityType:
-          type: string
-        opportunityName:
-          type: string
+
     AggregateIdentity:
       required:
       - aggregateType
@@ -141,15 +107,29 @@ components:
           type: string
         aggregateUID:
           type: string
-    WinOpportunityCommand:
-      allOf:
-      - $ref: '#/components/schemas/Command'
+
     Command:
       required:
       - commandType
       properties:
-        type:
-          commandType: string
+        commandType:
+          type: string
+
+    CreateOpportunityCommand:
+      required:
+      - opportunity
+      allOf:
+      - $ref: '#/components/schemas/Command'
+      - type: object
+        properties:
+          opportunity:
+            $ref: '#/components/schemas/Opportunity'
+
+    WinOpportunityCommand:
+      allOf:
+      - $ref: '#/components/schemas/Command'
+      - type: object
+
     Event:
       required:
       - occurredOn
@@ -167,19 +147,49 @@ components:
           $ref: '#/components/schemas/AggregateIdentity'
       discriminator:
         propertyName: eventType
-    CreateOpportunityCommand:
-      required:
-      - opportunity
-      allOf:
-      - $ref: '#/components/schemas/Command'
-      properties:
-        opportunity:
-          $ref: '#/components/schemas/Opportunity'
+
     OpportunityWonEvent:
-      required:
-      - newStatus
       allOf:
       - $ref: '#/components/schemas/Event'
+      - type: object
+        required:
+        - newStatus
+        properties:
+          newStatus:
+            type: string
+
+    OpportunityCreatedEvent:
+      allOf:
+      - $ref: '#/components/schemas/Event'
+      - type: object
+        required:
+        - newStatus
+        - customerName
+        - opportunityName
+        - opportunityType
+        properties:
+          newStatus:
+            type: string
+          customerName:
+            type: string
+          opportunityType:
+            type: string
+          opportunityName:
+            type: string
+
+    CommandProcessingResponse:
       properties:
-        newStatus:
-          type: string
+        events:
+          type: array
+          items:
+            # unclear how oneOf or anyOf apply to arrays. anyOf should work, as its less restictive, but that may be the wrong semantic
+            # https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
+            anyOf:
+            - $ref: '#/components/schemas/OpportunityCreatedEvent'
+            - $ref: '#/components/schemas/OpportunityWonEvent'
+            discriminator:
+              propertyName: eventType
+        errors:
+          type: array
+          items:
+            type: string
