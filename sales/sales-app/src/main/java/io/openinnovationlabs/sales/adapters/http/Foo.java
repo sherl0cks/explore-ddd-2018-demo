@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.openinnovationlabs.sales.domain.opportunity.CreateOpportunity;
 import io.openinnovationlabs.sales.domain.opportunity.OpportunityId;
 
-public class OpportunityDTO {
+public class Foo {
 
     public String customerName = "";
     public String opportunityType = "";
 
     @JsonCreator
-    public OpportunityDTO(@JsonProperty("customerName") String customerName,
-                          @JsonProperty("opportunityType") String opportunityType) {
+    public Foo(@JsonProperty("customerName") String customerName,
+               @JsonProperty("opportunityType") String opportunityType) {
         this.customerName = customerName;
         this.opportunityType = opportunityType;
     }

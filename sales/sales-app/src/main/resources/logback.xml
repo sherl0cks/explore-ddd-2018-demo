@@ -10,6 +10,7 @@
     <logger name="io.vertx" level="info"/>
     <logger name="io.openinnovationlabs.sales" level="info"/>
     <logger name="org.springframework" level="info"/>
+    <logger name="org.apache.cxf" level="debug"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

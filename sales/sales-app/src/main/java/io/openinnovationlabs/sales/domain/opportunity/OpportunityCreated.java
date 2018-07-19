@@ -32,4 +32,15 @@ public class OpportunityCreated extends AbstractBaseEvent {
         this.opportunityType = opportunityType;
     }
 
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public String getOpportunityType() {
+        return opportunityType;
+    }
+
+    public String getNewStatus() {
+        return newStatus;
+    }
 }

@@ -109,21 +109,29 @@ components:
           type: string
 
     Command:
+      type: object
       required:
       - commandType
       properties:
         commandType:
-          type: string
+          $ref: '#/components/schemas/CommandType'
+
+    CommandType:
+      type: string
+      enum:
+        - CreateOpportunityCommand
+        - WinOpportunityCommand
+
 
     CreateOpportunityCommand:
-      required:
-      - opportunity
       allOf:
       - $ref: '#/components/schemas/Command'
-      - type: object
+      - required:
+        - opportunity
         properties:
           opportunity:
             $ref: '#/components/schemas/Opportunity'
+
 
     WinOpportunityCommand:
       allOf:
@@ -139,9 +147,10 @@ components:
       properties:
         occurredOn:
           type: string
+          format: date-time
         eventStreamIndex:
           type: integer
-        type:
+        eventType:
           type: string
         aggregateIdentity:
           $ref: '#/components/schemas/AggregateIdentity'

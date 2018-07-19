@@ -14,7 +14,7 @@ public class OpportunityWon extends AbstractBaseEvent {
     @JsonCreator
     public OpportunityWon(@JsonProperty("opportunityId") AggregateIdentity opportunityId,
                           @JsonProperty("occurredOn") String occurredOn,
-                          @JsonProperty("streamIndex") long stream_index) {
-        super(opportunityId, occurredOn, stream_index);
+                          @JsonProperty("eventStreamIndex") long eventStreamIndex) {
+        super(opportunityId, occurredOn, eventStreamIndex);
     }
 }
