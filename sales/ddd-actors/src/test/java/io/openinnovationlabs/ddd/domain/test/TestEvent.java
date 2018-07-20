@@ -9,8 +9,8 @@ public class TestEvent extends AbstractBaseEvent {
     public String name;
 
     @JsonCreator
-    public TestEvent(@JsonProperty("aggregateIdentity") AggregateIdentity aggregateIdentity,
-                     @JsonProperty("occurredOn") String occurredOn,
+    public TestEvent(@JsonProperty("getAggregateIdentity") AggregateIdentity aggregateIdentity,
+                     @JsonProperty("getOccurredOn") String occurredOn,
                      @JsonProperty("streamIndex") long streamIndex,
                      @JsonProperty("name") String name) {
         super(aggregateIdentity, occurredOn, streamIndex);

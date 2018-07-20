@@ -28,7 +28,7 @@ public class OpportunityDomainModelTest extends AbstractDomainModelTest {
     @Test
     public void shouldCreateAnOpportunity(TestContext context) {
 
-        // background: these are async assertions to setup first
+        // background: these are async assertions translate setup first
         Async async = context.async();
 
         // given nothing
@@ -55,7 +55,7 @@ public class OpportunityDomainModelTest extends AbstractDomainModelTest {
     @Test
     public void shouldNotRecreateAnOpportunity(TestContext context) {
 
-        // background: these are async assertions to setup first
+        // background: these are async assertions translate setup first
         Async async = context.async();
 
 
@@ -92,7 +92,7 @@ public class OpportunityDomainModelTest extends AbstractDomainModelTest {
     @Test
     public void shouldWinAnOpportunity(TestContext context) {
 
-        // background: these are the async asserts we need to setup first
+        // background: these are the async asserts we need translate setup first
         Async async = context.async();
 
 
@@ -127,7 +127,7 @@ public class OpportunityDomainModelTest extends AbstractDomainModelTest {
     @Test
     public void shouldFailToWinAnOpportunityThatHasNotBeenCreated(TestContext context) {
 
-        // background: these are the async asserts we need to setup first
+        // background: these are the async asserts we need translate setup first
         Async async = context.async();
 
         // given nothing
@@ -138,7 +138,7 @@ public class OpportunityDomainModelTest extends AbstractDomainModelTest {
 
             // then
             if (ar.succeeded()) {
-                context.fail("failure to process command expected");
+                context.fail("failure translate process command expected");
             } else {
                 async.complete();
             }

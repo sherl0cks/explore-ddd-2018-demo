@@ -41,13 +41,15 @@ public class OpportunityHttpAdapter {
     public void createOpportunity(CreateOpportunityCommandDTO createOpportunityCommandDTO,
                                   @Suspended final AsyncResponse asyncResponse) {
 
-        CreateOpportunity createOpportunity = translator.to(createOpportunityCommandDTO, UUID.randomUUID().toString());
+        CreateOpportunity createOpportunity = translator.translate(createOpportunityCommandDTO, UUID.randomUUID().toString());
         domainModel.issueCommand(createOpportunity).setHandler(ar -> {
             if (ar.succeeded()) {
-                CommandProcessingResponseDTO dto = translator.to(ar.result());
+                CommandProcessingResponseDTO dto = translator.translate(ar.result());
                 asyncResponse.resume(Response.created(URI.create(createOpportunity.aggregateIdentity().id)).entity(dto).build());
-            } else if (ar.cause().getCause() instanceof DomainModelException) {
-                asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(ar.cause().toString()).build());
+            } else if (ar.cause() instanceof DomainModelException) {
+                CommandProcessingResponseDTO dto = new CommandProcessingResponseDTO();
+                dto.getErrors().add(ar.cause().getLocalizedMessage());
+                asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(dto).build());
             } else {
                 asyncResponse.resume(Response.serverError().build());
             }
@@ -64,12 +66,15 @@ public class OpportunityHttpAdapter {
                                @Suspended final AsyncResponse asyncResponse) {
 
 
-        Command command = translator.to(commandDTO, id);
+        Command command = translator.translate(commandDTO, id);
         domainModel.issueCommand(command).setHandler(ar -> {
             if (ar.succeeded()) {
-                asyncResponse.resume(Response.ok(ar.result()).build());
+                CommandProcessingResponseDTO dto = translator.translate(ar.result());
+                asyncResponse.resume(Response.ok(dto).build());
             } else if (ar.cause() instanceof DomainModelException) {
-                asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(ar.cause().toString()).build());
+                CommandProcessingResponseDTO dto = new CommandProcessingResponseDTO();
+                dto.getErrors().add(ar.cause().getLocalizedMessage());
+                asyncResponse.resume(Response.status(Response.Status.BAD_REQUEST).entity(dto).build());
             } else {
                 asyncResponse.resume(Response.serverError().build());
             }

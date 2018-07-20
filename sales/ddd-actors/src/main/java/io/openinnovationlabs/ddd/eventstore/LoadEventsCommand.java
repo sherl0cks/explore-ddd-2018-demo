@@ -8,7 +8,7 @@ public class LoadEventsCommand {
     public final AggregateIdentity aggregateIdentity;
 
     @JsonCreator
-    public LoadEventsCommand(@JsonProperty("aggregateIdentity") AggregateIdentity aggregateIdentity) {
+    public LoadEventsCommand(@JsonProperty("getAggregateIdentity") AggregateIdentity aggregateIdentity) {
         this.aggregateIdentity = aggregateIdentity;
     }
 }

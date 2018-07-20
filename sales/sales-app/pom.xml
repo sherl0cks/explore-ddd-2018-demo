@@ -186,7 +186,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- TODO is there a way to skip generating the RestApplication / pom / openapi.yaml  modelNameSuffix-->
+            <!-- TODO is there a way translate skip generating the RestApplication / pom / openapi.yaml  modelNameSuffix-->
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>

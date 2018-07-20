@@ -11,7 +11,7 @@ public class ReplayEventsCommand implements Command {
     public final List<Event> events;
 
     @JsonCreator()
-    public ReplayEventsCommand(@JsonProperty("aggregateIdentity") AggregateIdentity aggregateIdentity,
+    public ReplayEventsCommand(@JsonProperty("getAggregateIdentity") AggregateIdentity aggregateIdentity,
                                @JsonProperty("events") List<Event> events) {
         this.aggregateIdentity = aggregateIdentity;
         this.events = events;

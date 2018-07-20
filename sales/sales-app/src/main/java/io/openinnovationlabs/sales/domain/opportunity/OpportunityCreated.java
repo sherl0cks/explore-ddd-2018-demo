@@ -16,6 +16,7 @@ public class OpportunityCreated extends AbstractBaseEvent {
 
     public final String customerName;
     public final String opportunityType;
+    public final String opportunityName;
 
     @JsonProperty("newStatus")
     public final String newStatus = "created";
@@ -25,11 +26,13 @@ public class OpportunityCreated extends AbstractBaseEvent {
                               @JsonProperty("customerName") String customerName,
                               @JsonProperty("opportunityType") String opportunityType,
                               @JsonProperty("occurredOn") String occurredOn,
-                              @JsonProperty("streamIndex") long stream_index
+                              @JsonProperty("streamIndex") long stream_index,
+                              @JsonProperty("opportunityName") String opportunityName
     ) {
         super(opportunityId, occurredOn, stream_index);
         this.customerName = customerName;
         this.opportunityType = opportunityType;
+        this.opportunityName = opportunityName;
     }
 
     public String getCustomerName() {
@@ -42,5 +45,9 @@ public class OpportunityCreated extends AbstractBaseEvent {
 
     public String getNewStatus() {
         return newStatus;
+    }
+
+    public String getOpportunityName() {
+        return opportunityName;
     }
 }

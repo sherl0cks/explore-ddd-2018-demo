@@ -9,11 +9,11 @@ import java.time.Instant;
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
 public interface Event {
 
-    Instant occurredOn();
+    Instant getOccurredOn();
 
-    AggregateIdentity aggregateIdentity();
+    AggregateIdentity getAggregateIdentity();
 
-    long stream_index();
+    long getEventStreamIndex();
 
 
 }

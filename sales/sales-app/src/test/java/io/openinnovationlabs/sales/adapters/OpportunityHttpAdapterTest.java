@@ -41,40 +41,43 @@ public class OpportunityHttpAdapterTest {
     @Test
     public void shouldCreateOpportunityAndWinOpportunity() {
         CreateOpportunityCommandDTO createOpportunityCommandDTO = ObjectMother.createOpportunityCommandDTO();
+
         Response response =
                 given()
-                        .body(createOpportunityCommandDTO).contentType("application/json")
-                        .log().body()
-                        // .filter(validationFilter)
-                        .when()
-                        .post("/opportunities")
-                        .then().assertThat()
-                        .header("Location", notNullValue())
-                        .header("Location", not(isEmptyString()))
-                        .statusCode(201)
-                        .extract().response();
+                    .body(createOpportunityCommandDTO).contentType("application/json")
+                    .log().body()
+                // .filter(validationFilter)
+                .when()
+                    .post("/opportunities")
+                .then()
+                    .log().body()
+                    .assertThat()
+                    .header("Location", notNullValue())
+                    .header("Location", not(isEmptyString()))
+                    .statusCode(201)
+                    .body("events.size()", equalTo(1))
+                    .body("events[0].eventType", equalTo("OpportunityCreatedEvent"))
+                    .body("events[0].opportunityName", equalTo("super cool project"))
+                    .body("events[0].eventStreamIndex", equalTo(0))
+                    .body("events[0].aggregateIdentity.uid", r -> equalTo(r.header("Location")))
+                .extract().response();
 
-        CommandProcessingResponseDTO r = response.body().as(CommandProcessingResponseDTO.class);
-        Assert.assertEquals(r.getEvents().size(), 1);
-        Assert.assertTrue(r.getEvents().get(0) instanceof OpportunityCreatedEventDTO);
 
         WinOpportunityCommandDTO winOpportunityCommandDTO = ObjectMother.winOpportunityCommandDTO();
-        Response response2 =
-                given()
-                        .body(winOpportunityCommandDTO).contentType("application/json")
-                        .log().body()
+
+        given()
+            .body(winOpportunityCommandDTO).contentType("application/json")
+            .log().body()
                         // .filter(validationFilter)
-                        .when()
-                        .post("/opportunities/" + response.header("Location"))
-                        .then()
-                        .assertThat().statusCode(200)
-                        .extract().response();
-
-        CommandProcessingResponse r2 = response2.body().as(CommandProcessingResponse.class);
-        Assert.assertEquals(r2.events.size(), 1);
-        Assert.assertTrue(r2.events.get(0) instanceof OpportunityWon);
-
-
+        .when()
+            .post("/opportunities/" + response.header("Location"))
+        .then()
+            .log().body()
+            .assertThat().statusCode(200)
+            .body("events.size()", equalTo(1))
+            .body("events[0].eventType", equalTo("OpportunityWonEvent"))
+            .body("events[0].eventStreamIndex", equalTo(1))
+            .body("events[0].aggregateIdentity.uid", equalTo(response.header("Location")));
     }
 
     @Test
@@ -82,9 +85,36 @@ public class OpportunityHttpAdapterTest {
 
         String id = UUID.randomUUID().toString();
         WinOpportunityCommandDTO winOpportunityCommandDTO = ObjectMother.winOpportunityCommandDTO();
-        given().body(winOpportunityCommandDTO).contentType("application/json").
-                when().post("/opportunities/" + id)
-                .then()
-                .statusCode(400);
+
+        given()
+            .log().body()
+            .body(winOpportunityCommandDTO).contentType("application/json")
+        .when()
+            .post("/opportunities/" + id)
+        .then()
+            .log().body()
+            .statusCode(400)
+            .body("events.size()", equalTo(0))
+            .body("errors.size()", equalTo(1))
+            .body("errors[0]", containsString("Opportunity must be created first"));
+    }
+
+    @Test
+    public void shouldFailToCreateOpportunity() {
+
+        given()
+            .body(ObjectMother.badCreateOpportunityCommandDTO()).contentType("application/json")
+            .log().body()
+                        // .filter(validationFilter)
+        .when()
+            .post("/opportunities")
+        .then()
+            .log().body()
+            .assertThat()
+            .statusCode(400)
+            .body("events.size()", equalTo(0))
+            .body("errors.size()", equalTo(1))
+            .body( "errors[0]", containsString("cannot be null or empty"));
+
     }
 }

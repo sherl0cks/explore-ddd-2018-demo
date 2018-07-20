@@ -13,25 +13,25 @@ public class EventsReplayed implements Event {
 
     @JsonCreator
     public EventsReplayed(
-            @JsonProperty("occurredOn") String occurredOn,
-            @JsonProperty("aggregateIdentity") AggregateIdentity aggregateIdentity
+            @JsonProperty("getOccurredOn") String occurredOn,
+            @JsonProperty("getAggregateIdentity") AggregateIdentity aggregateIdentity
     ) {
         this.occurredOn = Instant.parse(occurredOn);
         this.aggregateIdentity = aggregateIdentity;
     }
 
     @Override
-    public Instant occurredOn() {
+    public Instant getOccurredOn() {
         return null;
     }
 
     @Override
-    public AggregateIdentity aggregateIdentity() {
+    public AggregateIdentity getAggregateIdentity() {
         return null;
     }
 
     @Override
-    public long stream_index() {
+    public long getEventStreamIndex() {
         return -1;
     }
 }

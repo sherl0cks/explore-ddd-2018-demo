@@ -55,7 +55,7 @@ public class PostgresqlAppendOnlyEventStoreIT {
                 if (ar2.succeeded()) {
 
                     // when I retrieve those events
-                    domainModel.loadEvents(events.get(0).aggregateIdentity()).setHandler( ar3 -> {
+                    domainModel.loadEvents(events.get(0).getAggregateIdentity()).setHandler(ar3 -> {
                         if ( ar3.succeeded() ){
                             List<Event> retrievedEvents = ar3.result().events;
                             for (int i=0; i<10; i++){

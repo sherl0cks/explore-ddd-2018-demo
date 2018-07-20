@@ -13,14 +13,17 @@ public class CreateOpportunity extends AbstractBaseCommand {
 
     public final String customerName;
     public final String opportunityType;
+    public final String opportunityName;
 
     @JsonCreator
     public CreateOpportunity(@JsonProperty("opportunityId") AggregateIdentity opportunityId,
                              @JsonProperty("customerName") String customerName,
-                             @JsonProperty("opportunityType") String opportunityType) {
+                             @JsonProperty("opportunityType") String opportunityType,
+                             @JsonProperty("opportunityName") String opportunityName) {
         super(opportunityId);
         this.customerName = customerName;
         this.opportunityType = opportunityType;
+        this.opportunityName = opportunityName;
     }
 
 }

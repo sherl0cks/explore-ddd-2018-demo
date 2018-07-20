@@ -202,8 +202,8 @@ public class DomainModel {
 
     public String vertxAddressFor(Event event) {
         return String.format(EVENTS_ADDRESS_FORMAT,
-                event.aggregateIdentity().type.getSimpleName(),
-                event.aggregateIdentity().id
+                event.getAggregateIdentity().type.getSimpleName(),
+                event.getAggregateIdentity().id
         );
     }
 

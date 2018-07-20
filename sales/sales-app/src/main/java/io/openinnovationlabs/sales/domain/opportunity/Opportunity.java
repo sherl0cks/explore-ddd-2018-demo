@@ -21,24 +21,28 @@ public class Opportunity extends Aggregate {
 
     private String customerName = "";
     private String opportunityType = "";
+    private String opportunityName = "";
     private String status = "";
 
 
     /**
-     * Command Processors must be public for reflection to work
+     * Command Processors must be public for reflection translate work
      */
 
     public List<Event> process(CreateOpportunity command) {
         if (status.equals("created")) {
             return Collections.emptyList();
-        } else {
+        } else if (command.opportunityName == null || command.opportunityName.isEmpty()){
+            throw new DomainModelException("opportunity name cannot be null or empty");
+        } {
             List<Event> events = Arrays.asList(
                     new OpportunityCreated(
                             command.aggregateIdentity(),
                             command.customerName,
                             command.opportunityType,
                             Instant.now().toString(),
-                            eventStreamIndex++
+                            eventStreamIndex++,
+                            command.opportunityName
                     )
             );
             return events;
@@ -63,13 +67,14 @@ public class Opportunity extends Aggregate {
     }
 
     /**
-     * Event Appliers must be public for reflection to work
+     * Event Appliers must be public for reflection translate work
      */
 
     public void apply(OpportunityCreated event) {
         this.customerName = event.customerName;
         this.opportunityType = event.opportunityType;
         this.status = "created";
+        this.opportunityName = event.opportunityName;
     }
 
     public void apply(OpportunityWon event) {

@@ -2,10 +2,7 @@ package io.openinnovationlabs.ddd.eventstore;
 
 import io.openinnovationlabs.ddd.AggregateIdentity;
 import io.openinnovationlabs.ddd.Event;
-import io.openinnovationlabs.ddd.eventstore.AppendOnlyStore;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +32,7 @@ public class InMemoryAppendOnlyEventStoreForTests extends AbstractEventStore imp
         Future<List<Event>> future = Future.future();
         List<Event> resultSet = new ArrayList<>();
         for (Event e : dataStore){
-            AggregateIdentity aggregateIdentity1 = e.aggregateIdentity();
+            AggregateIdentity aggregateIdentity1 = e.getAggregateIdentity();
             if (aggregateIdentity.equals(aggregateIdentity1)){
                 resultSet.add(e);
             }

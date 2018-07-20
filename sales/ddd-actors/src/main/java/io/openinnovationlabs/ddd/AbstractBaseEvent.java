@@ -6,42 +6,42 @@ public abstract class AbstractBaseEvent implements Event {
 
     public final AggregateIdentity aggregateIdentity;
     public final Instant occurredOn;
-    public final long streamIndex;
+    public final long eventStreamIndex;
 
     public AbstractBaseEvent(AggregateIdentity aggregateIdentity,
                              String occurredOn,
-                             long streamIndex) {
+                             long eventStreamIndex) {
         this.aggregateIdentity = aggregateIdentity;
         this.occurredOn = Instant.parse(occurredOn);
-        this.streamIndex = streamIndex;
+        this.eventStreamIndex = eventStreamIndex;
     }
 
     public AbstractBaseEvent(AggregateIdentity aggregateIdentity,
                              Instant occurredOn,
-                             long streamIndex) {
+                             long eventStreamIndex) {
         this.aggregateIdentity = aggregateIdentity;
         this.occurredOn = occurredOn;
-        this.streamIndex = streamIndex;
+        this.eventStreamIndex = eventStreamIndex;
     }
 
     @Override
-    public Instant occurredOn() {
+    public Instant getOccurredOn() {
         return occurredOn;
     }
 
     @Override
-    public AggregateIdentity aggregateIdentity() {
+    public AggregateIdentity getAggregateIdentity() {
         return aggregateIdentity;
     }
 
     @Override
-    public long stream_index() {
-        return streamIndex;
+    public long getEventStreamIndex() {
+        return eventStreamIndex;
     }
 
     @Override
     public String toString() {
-        return String.format("%s :: %s :: %d", aggregateIdentity, this.getClass().getSimpleName(), streamIndex);
+        return String.format("%s :: %s :: %d", aggregateIdentity, this.getClass().getSimpleName(), eventStreamIndex);
     }
 
     @Override
@@ -51,7 +51,7 @@ public abstract class AbstractBaseEvent implements Event {
 
         AbstractBaseEvent that = (AbstractBaseEvent) o;
 
-        if (streamIndex != that.streamIndex) return false;
+        if (eventStreamIndex != that.eventStreamIndex) return false;
         if (aggregateIdentity != null ? !aggregateIdentity.equals(that.aggregateIdentity) : that.aggregateIdentity != null)
             return false;
         return occurredOn != null ? occurredOn.equals(that.occurredOn) : that.occurredOn == null;
@@ -61,7 +61,9 @@ public abstract class AbstractBaseEvent implements Event {
     public int hashCode() {
         int result = aggregateIdentity != null ? aggregateIdentity.hashCode() : 0;
         result = 31 * result + (occurredOn != null ? occurredOn.hashCode() : 0);
-        result = 31 * result + (int) (streamIndex ^ (streamIndex >>> 32));
+        result = 31 * result + (int) (eventStreamIndex ^ (eventStreamIndex >>> 32));
         return result;
     }
+
+
 }

@@ -17,4 +17,8 @@ public class OpportunityWon extends AbstractBaseEvent {
                           @JsonProperty("eventStreamIndex") long eventStreamIndex) {
         super(opportunityId, occurredOn, eventStreamIndex);
     }
+
+    public String getNewStatus() {
+        return newStatus;
+    }
 }

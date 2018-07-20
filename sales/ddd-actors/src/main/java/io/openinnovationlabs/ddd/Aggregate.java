@@ -85,9 +85,9 @@ public abstract class Aggregate extends AbstractVerticle {
             if (events == null || events.size() == 0) {
                 LOGGER.debug(String.format("%s :: 0 events applied. Command processing complete.", command.aggregateIdentity()));
                 message.reply(JsonObject.mapFrom(new CommandProcessingResponse(new ArrayList<>())));
-            } else if (events.get(events.size() - 1) instanceof EventsReplayed) {
-                // do not persist  events, we're just replaying the event stream
-                // the event applier handles mutating state
+            } else if (command instanceof ReplayEventsCommand) {
+                // do not persist  events, as we only replayed the past
+                this.replaying = false;
                 LOGGER.debug(String.format("%s :: Replay complete.", command.aggregateIdentity()));
                 message.reply(JsonObject.mapFrom(new CommandProcessingResponse(events)));
             } else {
@@ -151,22 +151,17 @@ public abstract class Aggregate extends AbstractVerticle {
             }
         }
 
-        LOGGER.debug(String.format("%s :: %d event(s) applied ", events.get(0).aggregateIdentity(), events.size()));
+        LOGGER.debug(String.format("%s :: %d event(s) applied ", events.get(0).getAggregateIdentity(), events.size()));
     }
 
     public List<Event> process(ReplayEventsCommand command) {
         if (replaying) {
             List<Event> events = new ArrayList<>(command.events);
-            events.add(new EventsReplayed(Instant.now().toString(), command.aggregateIdentity));
             return events;
         } else {
             // TODO better exception handling here
             throw new IllegalStateException("aggregate must be in replay mode to accept replay command");
         }
-    }
-
-    public void apply(EventsReplayed event) {
-        this.replaying = false;
     }
 
 }

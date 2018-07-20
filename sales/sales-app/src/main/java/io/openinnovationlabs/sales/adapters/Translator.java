@@ -3,14 +3,8 @@ package io.openinnovationlabs.sales.adapters;
 import io.openinnovationlabs.ddd.Command;
 import io.openinnovationlabs.ddd.CommandProcessingResponse;
 import io.openinnovationlabs.ddd.Event;
-import io.openinnovationlabs.sales.domain.opportunity.CreateOpportunity;
-import io.openinnovationlabs.sales.domain.opportunity.OpportunityCreated;
-import io.openinnovationlabs.sales.domain.opportunity.OpportunityId;
-import io.openinnovationlabs.sales.domain.opportunity.WinOpportunity;
-import io.openinnovationlabs.sales.dto.CommandDTO;
-import io.openinnovationlabs.sales.dto.CommandProcessingResponseDTO;
-import io.openinnovationlabs.sales.dto.CreateOpportunityCommandDTO;
-import io.openinnovationlabs.sales.dto.OpportunityCreatedEventDTO;
+import io.openinnovationlabs.sales.domain.opportunity.*;
+import io.openinnovationlabs.sales.dto.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,40 +17,58 @@ public class Translator {
 
     private ModelMapper mapper = new ModelMapper();
 
-    public CreateOpportunity to(CreateOpportunityCommandDTO dto, String id) {
+    public CreateOpportunity translate(CreateOpportunityCommandDTO dto, String id) {
         return new CreateOpportunity(
                 new OpportunityId(id),
                 dto.getOpportunity().getCustomerName(),
-                dto.getOpportunity().getType()
+                dto.getOpportunity().getType(),
+                dto.getOpportunity().getName()
         );
 
     }
 
-    public Command to(CommandDTO commandDTO, String id) {
+    public Command translate(CommandDTO commandDTO, String id) {
 
         return new WinOpportunity(id);
     }
 
-    public CommandProcessingResponseDTO to(CommandProcessingResponse response) {
+    public CommandProcessingResponseDTO translate(CommandProcessingResponse response) {
         CommandProcessingResponseDTO dtoResponse = new CommandProcessingResponseDTO();
         if (response.events != null && response.events.size() > 0) {
-            dtoResponse.setEvents(new ArrayList<>());
             for (Event e : response.events) {
                 if (e instanceof OpportunityCreated) {
-                    OpportunityCreatedEventDTO dto = to(((OpportunityCreated) e));
-                    dtoResponse.getEvents().add(dto);
-                    LOGGER.debug(dto.toString());
+                    dtoResponse.getEvents().add(translate(((OpportunityCreated) e)));
+                } else if (e instanceof OpportunityWon) {
+                    dtoResponse.getEvents().add(translate((OpportunityWon) e));
                 } else {
                     LOGGER.error(String.format("Event type %s not currently support in CommandProcessingResponse " +
                             "translation", e.getClass().getName()));
                 }
             }
         }
+        LOGGER.debug(dtoResponse.toString());
         return dtoResponse;
     }
 
-    public OpportunityCreatedEventDTO to(OpportunityCreated event) {
-        return mapper.map(event, OpportunityCreatedEventDTO.class);
+    public OpportunityCreatedEventDTO translate(OpportunityCreated event) {
+        OpportunityCreatedEventDTO dto = mapper.map(event, OpportunityCreatedEventDTO.class);
+        mapCommonEventProperties(event, dto);
+        dto.setEventType(EventTypeDTO.OPPORTUNITYCREATEDEVENT);
+        return dto;
     }
 
+    public OpportunityWonEventDTO translate(OpportunityWon event) {
+        OpportunityWonEventDTO dto = mapper.map(event, OpportunityWonEventDTO.class);
+        mapCommonEventProperties(event, dto);
+        dto.setEventType(EventTypeDTO.OPPORTUNITYWONEVENT);
+        return dto;
+    }
+
+    private void mapCommonEventProperties(Event e, EventDTO dto) {
+        dto.setOccurredOn(e.getOccurredOn().toString());
+        AggregateIdentityDTO id = new AggregateIdentityDTO();
+        id.setType(AggregateTypeDTO.OPPORTUNITY);
+        id.setUid(e.getAggregateIdentity().id);
+        dto.setAggregateIdentity(id);
+    }
 }

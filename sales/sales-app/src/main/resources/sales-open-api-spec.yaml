@@ -100,13 +100,18 @@ components:
 
     AggregateIdentity:
       required:
-      - aggregateType
-      - aggregateUUID
+      - type
+      - uid
       properties:
-        aggregateType:
+        type:
+          $ref: '#/components/schemas/AggregateType'
+        uid:
           type: string
-        aggregateUID:
-          type: string
+
+    AggregateType:
+      type: string
+      enum:
+        - Opportunity
 
     Command:
       type: object
@@ -147,15 +152,20 @@ components:
       properties:
         occurredOn:
           type: string
-          format: date-time
         eventStreamIndex:
           type: integer
         eventType:
-          type: string
+          $ref: '#/components/schemas/EventType'
         aggregateIdentity:
           $ref: '#/components/schemas/AggregateIdentity'
       discriminator:
         propertyName: eventType
+
+    EventType:
+      type: string
+      enum:
+        - OpportunityCreatedEvent
+        - OpportunityWonEvent
 
     OpportunityWonEvent:
       allOf:
@@ -191,7 +201,7 @@ components:
         events:
           type: array
           items:
-            # unclear how oneOf or anyOf apply to arrays. anyOf should work, as its less restictive, but that may be the wrong semantic
+            # unclear how oneOf or anyOf apply translate arrays. anyOf should work, as its less restictive, but that may be the wrong semantic
             # https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
             anyOf:
             - $ref: '#/components/schemas/OpportunityCreatedEvent'

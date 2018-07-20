@@ -31,15 +31,15 @@ public class PostgresqlAppendOnlyEventStore extends AbstractEventStore {
     private SQLClient sqlClient;
 
     private static final String LOAD_EVENTS_STATEMENT_FORMAT = "SELECT data FROM es_events WHERE name='%s'";
-    private static final String APPEND_STATEMENT = "INSERT INTO es_events (name, stream_index, occurred_on, data) " +
+    private static final String APPEND_STATEMENT = "INSERT INTO es_events (name, getEventStreamIndex, occurred_on, data) " +
                                                         "VALUES(?, ?, cast(? as timestamp), cast(? as json))";
     private static final String CREATE_TABLE_STATEMENT =   "CREATE TABLE IF NOT EXISTS es_events( " +
                                                                 "id serial primary key," +
                                                                 "name text not null," +
-                                                                "stream_index integer not null," +
+                                                                "getEventStreamIndex integer not null," +
                                                                 "occurred_on timestamp with time zone," +
                                                                 "data json not null," +
-                                                                "UNIQUE (name, stream_index)" +
+                                                                "UNIQUE (name, getEventStreamIndex)" +
                                                             ");";
 
     // TODO handle other params
@@ -128,9 +128,9 @@ public class PostgresqlAppendOnlyEventStore extends AbstractEventStore {
         List<JsonArray> batch = new ArrayList<>();
         for (Event e : events) {
             JsonArray array = new JsonArray();
-            array.add(e.aggregateIdentity().toString());
-            array.add(e.stream_index());
-            array.add(OffsetDateTime.ofInstant(e.occurredOn(), ZoneId.systemDefault()).toString());
+            array.add(e.getAggregateIdentity().toString());
+            array.add(e.getEventStreamIndex());
+            array.add(OffsetDateTime.ofInstant(e.getOccurredOn(), ZoneId.systemDefault()).toString());
             array.add(JsonObject.mapFrom(new PersistenceEnvelope(e)).toString());
             batch.add(array);
         }
