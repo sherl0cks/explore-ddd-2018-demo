@@ -10,4 +10,6 @@ RUN yum install git -y ; \
     chown jboss:root $JBOSS_HOME/../.m2/repository && \
     chmod 774 $JBOSS_HOME/../.m2/repository 
 
+COPY ./s2i/bin/ /usr/libexec/s2i
+
 USER jboss
