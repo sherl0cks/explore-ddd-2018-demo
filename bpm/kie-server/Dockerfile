@@ -12,4 +12,4 @@ RUN yum install git -y ; \
 
 COPY ./s2i/bin/ /usr/libexec/s2i
 
-USER jboss
+USER 1001

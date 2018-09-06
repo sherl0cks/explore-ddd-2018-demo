@@ -16,6 +16,7 @@ oc volume dc/kie-workbench --add -m /opt/jboss/wildfly/git --claim-size=1G --nam
 
 oc new-build --name kie-server-base https://github.com/sherl0cks/explore-ddd-2018-demo --context-dir bpm/kie-server
 oc new-build --name kie-server --binary=true --strategy=source -i kie-server-base
+oc set triggers bc/kie-server --auto
 oc new-app --name kie-server -i kie-server \
     -e KIE_SERVER_CONTROLLER=http://kie-workbench:8080/jbpm-console/rest/controller \
     -e KIE_MAVEN_REPO=http://kie-workbench:8080/jbpm-console/maven2 \
