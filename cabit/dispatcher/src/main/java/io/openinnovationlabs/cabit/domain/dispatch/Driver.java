@@ -8,13 +8,15 @@ import io.vertx.core.json.JsonObject;
 public class Driver implements Aggregate {
 
     private String id;
+    private DriverStatus status;
 
     public Driver(JsonObject jsonObject) {
-
+        DriverConverter.fromJson(jsonObject,this);
     }
 
     public Driver(String id) {
         this.id = id;
+        this.status = DriverStatus.LOGGED_OFF;
     }
 
     protected Driver() {
@@ -23,11 +25,11 @@ public class Driver implements Aggregate {
 
     @Override
     public String identifier() {
-        return id;
+        return this.id;
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(String id) {
@@ -36,6 +38,7 @@ public class Driver implements Aggregate {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
+        DriverConverter.toJson(this, json);
         return json;
     }
 }

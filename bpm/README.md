@@ -1,0 +1,1 @@
+Modified version of https://github.com/jboss-dockerfiles/drools/blob/master/kie-server/showcase/etc/settings.xml that removes dependency on `$HOME` being usable. 

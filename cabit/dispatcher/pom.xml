@@ -8,7 +8,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Open Innovation Labs Sales App</name>
+    <name>Open Innovation Labs CabIt Dispatcher App</name>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
