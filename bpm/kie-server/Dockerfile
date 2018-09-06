@@ -1,5 +1,8 @@
 FROM jboss/kie-server-showcase:7.10.0.Final
 
+
+LABEL io.openshift.s2i.scripts-url=image:///usr/libexec/s2i
+
 ####### KIE Server CUSTOM CONFIGURATION ############
 ADD etc/settings.xml $JBOSS_HOME/../.m2/settings.xml
 
