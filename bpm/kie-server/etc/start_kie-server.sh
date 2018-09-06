@@ -9,8 +9,8 @@ echo "KIE_SERVER_LOCATION: $KIE_SERVER_LOCATION"
 # assume route is created and workbench is available
 CONTROLLER_HOST=$(oc get route kie-workbench --template="{{.spec.host}}")
 CONTROLLER_PATH=$(oc get route kie-workbench --template="{{.spec.path}}")
-KIE_SERVER_CONTROLLER=http://$CONTROLLER_HOST$CONTROLLER_PATH/rest/controller
-KIE_MAVEN_REPO=http://$CONTROLLER_HOST$CONTROLLER_PATH/maven2
+KIE_SERVER_CONTROLLER=http://kie-workbench:8080/jbpm-console/rest/controller #http://$CONTROLLER_HOST$CONTROLLER_PATH/rest/controller
+KIE_MAVEN_REPO=http://kie-workbench:8080/jbpm-console/maven2 #http://$CONTROLLER_HOST$CONTROLLER_PATH/maven2
 echo "KIE_SERVER_CONTROLLER: $KIE_SERVER_CONTROLLER"
 echo "KIE_MAVEN_REPO: $KIE_MAVEN_REPO"
 
