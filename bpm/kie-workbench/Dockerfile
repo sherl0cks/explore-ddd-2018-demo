@@ -7,4 +7,4 @@ RUN yum install git -y ; \
     chown jboss:root $JBOSS_HOME/git && \
     chmod 774 $JBOSS_HOME/git
 
-USER jboss
+USER 1001
