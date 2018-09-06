@@ -5,7 +5,7 @@ set -ex
 shopt -s dotglob
 
 if [ "$(ls -A /tmp/src)" ]; then
-    tar -xvzf *.tar.gz
+    tar -xvzf /tmp/src/*.tar.gz
     mv /tmp/src/*.jar $JBOSS_HOME/standalone/deployments/kie-server.war/WEB-INF/lib/
     rm *
 else
