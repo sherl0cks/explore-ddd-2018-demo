@@ -24,3 +24,8 @@ JBOSS_ARGUMENTS="$JBOSS_ARGUMENTS -Dorg.kie.server.controller=$KIE_SERVER_CONTRO
 echo "Running KIE Execution Server on JBoss Wildfly..."
 exec ./standalone.sh $JBOSS_ARGUMENTS -c standalone-full-kie-server.xml
 exit $?
+
+http://kie-workbench:8080/jbpm-console/rest/controller/server/  response code 404
+01:54:42,686 INFO  [org.kie.server.controller.websocket.client.WebSocketKieServerControllerImpl] (KieServer-ControllerConnect) Kie Server points to non Web Socket controller 'http://kie-workbench:8080/jbpm-console/rest/controller
+
+http://kie-wb:8080/jbpm-console/rest/controller
