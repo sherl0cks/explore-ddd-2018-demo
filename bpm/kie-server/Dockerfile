@@ -8,7 +8,6 @@ USER root
 RUN yum install git -y ; \ 
     mkdir $JBOSS_HOME/../.m2/repository && \
     chown jboss:root $JBOSS_HOME/../.m2/repository && \
-    chmod 774 $JBOSS_HOME/../.m2/repository && \
-    curl $OC_CLIENT_MIRROR | tar -C /usr/local/bin/ -xzf - ;
+    chmod 774 $JBOSS_HOME/../.m2/repository 
 
 USER jboss
