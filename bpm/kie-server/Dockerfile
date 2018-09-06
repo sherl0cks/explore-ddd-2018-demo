@@ -15,7 +15,8 @@ RUN yum install git -y ; \
     chown jboss:root $JBOSS_HOME/../.m2/repository && \
     chmod 774 $JBOSS_HOME/../.m2/repository && \
     cp $JBOSS_HOME/bin/start_kie-server.sh /usr/libexec/s2i && \
-    mv /usr/libexec/s2i/start_kie-server.sh /usr/libexec/s2i/run
+    cd /usr/libexec/s2i && \
+    mv start_kie-server.sh run
 
 COPY ./s2i/bin/ /usr/libexec/s2i
 
