@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 # assume route is created
-HOST=$(oc get route kie-server --template="{{.spec.host}}")
-PATH=$(oc get route kie-server --template="{{.spec.path}}")
-KIE_SERVER_LOCATION=http://$HOST$PATH
+SERVER_HOST=$(oc get route kie-server --template="{{.spec.host}}")
+SERVER_PATH=$(oc get route kie-server --template="{{.spec.path}}")
+KIE_SERVER_LOCATION=http://$SERVER_HOST$SERVER_PATH
 echo "KIE_SERVER_LOCATION: $KIE_SERVER_LOCATION"
 
 # assume route is created and workbench is available
-HOST=$(oc get route kie-workbench --template="{{.spec.host}}")
-PATH=$(oc get route kie-workbench --template="{{.spec.path}}")
-KIE_SERVER_CONTROLLER=http://$HOST$PATH/rest/controller
-KIE_MAVEN_REPO=http://$HOST$PATH/maven2
+CONTROLLER_HOST=$(oc get route kie-workbench --template="{{.spec.host}}")
+CONTROLLER_PATH=$(oc get route kie-workbench --template="{{.spec.path}}")
+KIE_SERVER_CONTROLLER=http://$CONTROLLER_HOST$CONTROLLER_PATH/rest/controller
+KIE_MAVEN_REPO=http://$CONTROLLER_HOST$CONTROLLER_PATH/maven2
 echo "KIE_SERVER_CONTROLLER: $KIE_SERVER_CONTROLLER"
 echo "KIE_MAVEN_REPO: $KIE_MAVEN_REPO"
 
