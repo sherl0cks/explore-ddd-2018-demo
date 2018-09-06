@@ -5,7 +5,8 @@ ADD etc/settings.xml $JBOSS_HOME/../.m2/settings.xml
 
 ## Make sure maven repo is writable in k8s
 USER root
-RUN mkdir $JBOSS_HOME/../.m2/repository && \
+RUN sudo yum install git -y && \ 
+    mkdir $JBOSS_HOME/../.m2/repository && \
     chown jboss:root $JBOSS_HOME/../.m2/repository && \
     chmod 774 $JBOSS_HOME/../.m2/repository && \
     curl $OC_CLIENT_MIRROR | tar -C /usr/local/bin/ -xzf - ;
