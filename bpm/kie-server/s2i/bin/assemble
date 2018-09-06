@@ -4,5 +4,11 @@ set -e
 
 shopt -s dotglob
 
-echo "assembling!!!"
-ls /tmp/src
+if [ "$(ls -A /tmp/src)" ]; then
+    echo "moving files to kie server..."
+    mv /tmp/src/* $JBOSS_HOME/standalone/deployments/kie-server.war/WEB-INF/lib/
+else
+    echo "no files provided in binary build"    
+fi
+
+echo "build complete"
