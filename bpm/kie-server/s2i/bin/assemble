@@ -1,14 +1,14 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 shopt -s dotglob
 
 if [ "$(ls -A /tmp/src)" ]; then
-    echo "moving files to kie server..."
+    echo "Moving files to kie server..."
     mv /tmp/src/* $JBOSS_HOME/standalone/deployments/kie-server.war/WEB-INF/lib/
 else
-    echo "no files provided in binary build"    
+    echo "No files provided in binary build. This is a no op."    
 fi
 
-echo "build complete"
+echo "Build complete."
