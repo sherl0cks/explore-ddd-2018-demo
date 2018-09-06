@@ -5,8 +5,9 @@ set -ex
 shopt -s dotglob
 
 if [ "$(ls -A /tmp/src)" ]; then
-    echo "Moving files to kie server..."
-    mv /tmp/src/* $JBOSS_HOME/standalone/deployments/kie-server.war/WEB-INF/lib/
+    tar -xvzf *.tar.gx
+    mv /tmp/src/*.jar $JBOSS_HOME/standalone/deployments/kie-server.war/WEB-INF/lib/
+    rm *
 else
     echo "No files provided in binary build. This is a no op."    
 fi
