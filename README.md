@@ -9,3 +9,4 @@ In short:
 - The `cabit` directory is the first cut an idea to build a cab hailing demo app. That idea will be flushed out elsewhere. 
 
 
+Slides from the talk are [here](https://www.slideshare.net/JustinHolmes2/visualizing-your-event-storm-in-new-ways)
