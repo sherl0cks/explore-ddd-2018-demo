@@ -1,1 +1,6 @@
-Modified version of https://github.com/jboss-dockerfiles/drools/blob/master/kie-server/showcase/etc/settings.xml that removes dependency on `$HOME` being usable. 
+This directory contains:
+
+- Modified images from https://hub.docker.com/u/jboss/ to get `kie-server` and `kie-workbench` running on OCP. `run.sh` can be used to deploy these images to [OpenShift](https://developers.redhat.com/products/openshift/overview/), which was how they ran for the demo. In retrospect, this is a bit of a hack and you can get easier to use and better performing deployments using [the free Red Hat Developer account](https://developers.redhat.com/auth/realms/rhd/login-actions/registration?client_id=web) and [the Red Hat Process Automation Manager images / templates](https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.0/).
+- A Java app to run the demo, using a unit test in `demo-driver`. This is a modified version of a more robust solution that is being built elsewhere. Ping me for more info.
+
+You will also need the process models found in [this repo](https://github.com/sherl0cks/explore-ddd-2018-kbase). You'll need to push that repo into the workbench, and then use it to build and deploy the process model into the decision server. The easiest way to do that is `oc port-forward` the git server port from the deployed workbench.
